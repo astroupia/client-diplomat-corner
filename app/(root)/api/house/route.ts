@@ -18,12 +18,23 @@ export async function GET(req: NextRequest) {
     if (status) query.status = status;
     if (visibility) query.visibility = visibility;
 
+    console.log("House API Query:", query);
+
     const houses = await House.find(query).sort({ createdAt: -1 }).lean(); // Use .lean() for plain JS objects
-    return NextResponse.json(houses);
+    console.log(`Found ${houses.length} houses in the database`);
+
+    return NextResponse.json({
+      success: true,
+      houses: houses,
+    });
   } catch (error) {
     console.error("Error fetching houses:", error);
     return NextResponse.json(
-      { error: "Failed to fetch houses" },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }

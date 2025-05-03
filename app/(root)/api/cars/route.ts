@@ -83,7 +83,10 @@ export async function GET(
     if (status) query.status = status;
     if (visibility) query.visibility = visibility;
 
+    console.log("Car API Query:", query);
+
     const cars = await Car.find(query).sort({ createdAt: -1 });
+    console.log(`Found ${cars.length} cars in the database`);
 
     return NextResponse.json({
       success: true,
@@ -92,7 +95,11 @@ export async function GET(
   } catch (error) {
     console.error("Error fetching cars:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch cars" },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }

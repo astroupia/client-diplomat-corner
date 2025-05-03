@@ -48,6 +48,10 @@ const CardContainer: React.FC = () => {
         }
 
         const data = await response.json();
+        // Debug logging
+        console.log("Cars API Response:", data);
+
+        // Check if data.cars exists and is an array
         if (data.success && Array.isArray(data.cars)) {
           // Validate and transform car data before setting state
           const validatedCars = data.cars.map((car: ICar) => ({
@@ -68,12 +72,20 @@ const CardContainer: React.FC = () => {
             (car: ICar) => car.status === "Active"
           );
 
+          // Debug logging for active cars
+          console.log(
+            `Found ${activeCars.length} active cars out of ${validatedCars.length} total cars`
+          );
+
           // Separate user cars from all cars
           if (userId) {
             const userOwnedCars = activeCars.filter(
               (car: ICar) => car.userId === userId
             );
             setUserCars(userOwnedCars);
+            console.log(
+              `Found ${userOwnedCars.length} cars owned by the current user`
+            );
           }
 
           setCars(activeCars);

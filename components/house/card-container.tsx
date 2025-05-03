@@ -59,16 +59,52 @@ const CardContainer: React.FC = () => {
         }
 
         const data = await response.json();
-        if (Array.isArray(data)) {
+        // Debug logging
+        console.log("Houses API Response:", data);
+
+        // Check for new response format (matching cars API)
+        if (data && data.success && Array.isArray(data.houses)) {
           // Filter out pending houses - only show active listings
-          const activeHouses = data.filter(
+          const activeHouses = data.houses.filter(
             (house: IHouse) => house.status === "Active"
+          );
+
+          // Debug logging
+          console.log(
+            `Found ${activeHouses.length} active houses out of ${data.houses.length} total houses`
           );
 
           // Separate user houses from all houses
           if (userId) {
             const userOwnedHouses = activeHouses.filter(
-              (house) => house.userId === userId
+              (house: IHouse) => house.userId === userId
+            );
+            setUserHouses(userOwnedHouses);
+            console.log(
+              `Found ${userOwnedHouses.length} houses owned by the current user`
+            );
+          }
+
+          setHouses(activeHouses);
+          setFullHouses(activeHouses); // Store the full set of houses for filtering
+          setHasMore(activeHouses.length > displayLimit);
+        }
+        // Fallback for old response format (direct array)
+        else if (Array.isArray(data)) {
+          // Filter out pending houses - only show active listings
+          const activeHouses = data.filter(
+            (house: IHouse) => house.status === "Active"
+          );
+
+          // Debug logging
+          console.log(
+            `Found ${activeHouses.length} active houses out of ${data.length} total houses (old format)`
+          );
+
+          // Separate user houses from all houses
+          if (userId) {
+            const userOwnedHouses = activeHouses.filter(
+              (house: IHouse) => house.userId === userId
             );
             setUserHouses(userOwnedHouses);
           }
@@ -77,7 +113,8 @@ const CardContainer: React.FC = () => {
           setFullHouses(activeHouses); // Store the full set of houses for filtering
           setHasMore(activeHouses.length > displayLimit);
         } else {
-          throw new Error("Invalid data format: Expected an array");
+          console.error("Unexpected API response format:", data);
+          throw new Error("Invalid data format: Expected houses data");
         }
       } catch (error) {
         console.error("Error fetching houses:", error);
@@ -236,7 +273,7 @@ const CardContainer: React.FC = () => {
 
   return (
     <>
-      <div className="container pb-10">
+      <div className="container mx-auto pb-10">
         <ListingBanner type="house" />
 
         {/* Filter Section */}

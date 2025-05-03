@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;
+const DB_NAME = "diplomat-corner";
 
 interface MongooseCache {
   conn: mongoose.Connection | null;
@@ -21,12 +22,16 @@ export const connectToDatabase = async () => {
   try {
     cached.promise =
       cached.promise ||
-      mongoose.connect(MONGODB_URI).then((m) => {
-        return m.connection;
-      });
+      mongoose
+        .connect(MONGODB_URI, {
+          dbName: DB_NAME,
+        })
+        .then((m) => {
+          return m.connection;
+        });
 
     cached.conn = await cached.promise;
-    console.log("Connected to MongoDB successfully");
+    console.log(`Connected to MongoDB database '${DB_NAME}' successfully`);
     return cached.conn;
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
