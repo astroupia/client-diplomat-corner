@@ -9,7 +9,11 @@ import { Car, ChevronDown, Filter, SlidersHorizontal } from "lucide-react";
 import FilterSection, { FilterOption } from "../filter-section";
 import ListingBanner from "@/components/listing-banner";
 
-const CardContainer: React.FC = () => {
+interface CardContainerProps {
+  advertisementType?: string;
+}
+
+const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const { userId } = useAuth();
   const { user } = useUser();
   const [cars, setCars] = useState<ICar[]>([]);
@@ -72,14 +76,25 @@ const CardContainer: React.FC = () => {
             (car: ICar) => car.status === "Active"
           );
 
+          // Apply advertisement type filter if provided
+          let filteredCars = activeCars;
+          if (advertisementType) {
+            filteredCars = activeCars.filter(
+              (car: ICar) => car.advertisementType === advertisementType
+            );
+            console.log(
+              `Filtered to ${filteredCars.length} cars with advertisementType: ${advertisementType}`
+            );
+          }
+
           // Debug logging for active cars
           console.log(
-            `Found ${activeCars.length} active cars out of ${validatedCars.length} total cars`
+            `Found ${filteredCars.length} active cars out of ${validatedCars.length} total cars`
           );
 
           // Separate user cars from all cars
           if (userId) {
-            const userOwnedCars = activeCars.filter(
+            const userOwnedCars = filteredCars.filter(
               (car: ICar) => car.userId === userId
             );
             setUserCars(userOwnedCars);
@@ -88,9 +103,9 @@ const CardContainer: React.FC = () => {
             );
           }
 
-          setCars(activeCars);
-          setFullCars(activeCars); // Store the full set of cars for filtering
-          setHasMore(activeCars.length > displayLimit);
+          setCars(filteredCars);
+          setFullCars(filteredCars); // Store the full set of cars for filtering
+          setHasMore(filteredCars.length > displayLimit);
         } else {
           throw new Error(
             data.error || "Invalid data format: Expected an array of cars"
@@ -105,7 +120,7 @@ const CardContainer: React.FC = () => {
     };
 
     fetchCars();
-  }, [userId, displayLimit]);
+  }, [userId, displayLimit, advertisementType]);
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
@@ -253,7 +268,7 @@ const CardContainer: React.FC = () => {
 
   return (
     <div className="container mx-auto">
-      <ListingBanner type="car" />
+      {!advertisementType && <ListingBanner type="car" />}
 
       {/* Filter Section */}
       <div className="py-10">

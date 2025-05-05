@@ -9,7 +9,11 @@ import { ChevronDown, Filter, House, SlidersHorizontal } from "lucide-react";
 import FilterSection from "../filter-section";
 import ListingBanner from "../listing-banner";
 
-const CardContainer: React.FC = () => {
+interface CardContainerProps {
+  advertisementType?: string;
+}
+
+const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const { userId } = useAuth();
   const [houses, setHouses] = useState<IHouse[]>([]);
   const [userHouses, setUserHouses] = useState<IHouse[]>([]);
@@ -69,14 +73,25 @@ const CardContainer: React.FC = () => {
             (house: IHouse) => house.status === "Active"
           );
 
+          // Apply advertisement type filter if provided
+          let filteredHouses = activeHouses;
+          if (advertisementType) {
+            filteredHouses = activeHouses.filter(
+              (house: IHouse) => house.advertisementType === advertisementType
+            );
+            console.log(
+              `Filtered to ${filteredHouses.length} houses with advertisementType: ${advertisementType}`
+            );
+          }
+
           // Debug logging
           console.log(
-            `Found ${activeHouses.length} active houses out of ${data.houses.length} total houses`
+            `Found ${filteredHouses.length} active houses out of ${data.houses.length} total houses`
           );
 
           // Separate user houses from all houses
           if (userId) {
-            const userOwnedHouses = activeHouses.filter(
+            const userOwnedHouses = filteredHouses.filter(
               (house: IHouse) => house.userId === userId
             );
             setUserHouses(userOwnedHouses);
@@ -85,9 +100,9 @@ const CardContainer: React.FC = () => {
             );
           }
 
-          setHouses(activeHouses);
-          setFullHouses(activeHouses); // Store the full set of houses for filtering
-          setHasMore(activeHouses.length > displayLimit);
+          setHouses(filteredHouses);
+          setFullHouses(filteredHouses); // Store the full set of houses for filtering
+          setHasMore(filteredHouses.length > displayLimit);
         }
         // Fallback for old response format (direct array)
         else if (Array.isArray(data)) {
@@ -96,22 +111,33 @@ const CardContainer: React.FC = () => {
             (house: IHouse) => house.status === "Active"
           );
 
+          // Apply advertisement type filter if provided
+          let filteredHouses = activeHouses;
+          if (advertisementType) {
+            filteredHouses = activeHouses.filter(
+              (house: IHouse) => house.advertisementType === advertisementType
+            );
+            console.log(
+              `Filtered to ${filteredHouses.length} houses with advertisementType: ${advertisementType}`
+            );
+          }
+
           // Debug logging
           console.log(
-            `Found ${activeHouses.length} active houses out of ${data.length} total houses (old format)`
+            `Found ${filteredHouses.length} active houses out of ${data.length} total houses (old format)`
           );
 
           // Separate user houses from all houses
           if (userId) {
-            const userOwnedHouses = activeHouses.filter(
+            const userOwnedHouses = filteredHouses.filter(
               (house: IHouse) => house.userId === userId
             );
             setUserHouses(userOwnedHouses);
           }
 
-          setHouses(activeHouses);
-          setFullHouses(activeHouses); // Store the full set of houses for filtering
-          setHasMore(activeHouses.length > displayLimit);
+          setHouses(filteredHouses);
+          setFullHouses(filteredHouses); // Store the full set of houses for filtering
+          setHasMore(filteredHouses.length > displayLimit);
         } else {
           console.error("Unexpected API response format:", data);
           throw new Error("Invalid data format: Expected houses data");
@@ -125,7 +151,7 @@ const CardContainer: React.FC = () => {
     };
 
     fetchHouses();
-  }, [userId, displayLimit]);
+  }, [userId, displayLimit, advertisementType]);
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
@@ -274,7 +300,7 @@ const CardContainer: React.FC = () => {
   return (
     <>
       <div className="container mx-auto pb-10">
-        <ListingBanner type="house" />
+        {!advertisementType && <ListingBanner type="house" />}
 
         {/* Filter Section */}
         <div className="pt-10 pb-5">

@@ -240,8 +240,20 @@ const NavBar: React.FC = () => {
       type: "car",
     },
     {
+      label: "Cars For Sale",
+      href: "/car-for-sale",
+      name: "",
+      type: "car",
+    },
+    {
       label: "Houses",
       href: "/house",
+      name: "",
+      type: "house",
+    },
+    {
+      label: "Houses For Rent",
+      href: "/house-for-rent",
       name: "",
       type: "house",
     },
