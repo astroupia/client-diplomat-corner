@@ -4,8 +4,9 @@ export interface IUser extends Document {
   clerkId: string;
   email: string;
   firstName: string;
-  lastName: string;
+  lastName?: string;
   address?: string;
+  phoneNumber?: string;
   imageUrl: string;
   role: "customer" | "admin";
   timestamp: string;
@@ -16,9 +17,10 @@ export interface IUser extends Document {
 const UserSchema: Schema = new Schema({
   clerkId: { type: String, required: true, unique: true },
   firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+  lastName: { type: String },
   email: { type: String, required: true, unique: true },
   address: { type: String, required: false },
+  phoneNumber: { type: String },
   imageUrl: { type: String, required: false },
   role: {
     type: String,

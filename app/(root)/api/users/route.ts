@@ -61,12 +61,7 @@ export async function POST(req: Request) {
 
     const userData = await req.json();
 
-    if (
-      !userData.clerkId ||
-      !userData.email ||
-      !userData.firstName ||
-      !userData.lastName
-    ) {
+    if (!userData.clerkId || !userData.email || !userData.firstNameS) {
       return NextResponse.json(
         { error: "Missing required user data" },
         { status: 400 }
