@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ["diplomatcorner.net"],
+    domains: ["diplomatcorner.net", "img.clerk.com"],
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if

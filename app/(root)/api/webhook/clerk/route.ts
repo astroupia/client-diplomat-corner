@@ -128,8 +128,10 @@ export async function POST(req: NextRequest) {
 
       console.log("Prepared user data:", JSON.stringify(userDbData));
 
+
       // Determine the API URL to use
       const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
+      
       if (!apiUrl) {
         console.error("NEXT_PUBLIC_SERVER_URL is missing");
         return NextResponse.json(
@@ -137,6 +139,7 @@ export async function POST(req: NextRequest) {
           { status: 500 }
         );
       }
+
 
       // Call our API to create the user
       const response = await fetch(`${apiUrl}/api/users`, {

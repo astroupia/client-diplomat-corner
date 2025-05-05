@@ -1,7 +1,7 @@
 import { connectToDatabase } from "@/lib/db-connect";
 import User from "@/lib/models/user.model";
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 // Get all users (with optional query filters)
 export async function GET(req: Request) {
@@ -114,49 +114,46 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     await connectToDatabase();
+    const { userId } = await auth();
+    const user = await currentUser();
+    const { phoneNumber } = await req.json();
 
-    const userData = await req.json();
-
-    if (!userData.clerkId) {
-      return NextResponse.json(
-        { error: "Clerk ID is required" },
-        { status: 400 }
-      );
+    if (!userId || !user) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const existingUser = await User.findOne({ clerkId: userData.clerkId });
+    if (!phoneNumber) {
+      return new NextResponse("Phone number is required", { status: 400 });
+    }
+
+    // First check if user exists
+    let existingUser = await User.findOne({ clerkId: userId });
+
     if (!existingUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    // Update only provided fields
-    if (userData.firstName) existingUser.firstName = userData.firstName;
-    if (userData.lastName) existingUser.lastName = userData.lastName;
-    if (userData.email) existingUser.email = userData.email;
-    if (userData.imageUrl) existingUser.imageUrl = userData.imageUrl;
-    if (userData.address) existingUser.address = userData.address;
-    if (userData.role && ["customer", "admin"].includes(userData.role)) {
-      existingUser.role = userData.role;
-    }
-
-    await existingUser.save();
-
-    return NextResponse.json(
-      { message: "User updated successfully", user: existingUser },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Error updating user:", error);
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: "Failed to update user", details: error.message },
-        { status: 500 }
+      // Create new user with required fields from Clerk
+      existingUser = await User.create({
+        clerkId: userId,
+        email: user.emailAddresses[0].emailAddress,
+        firstName: user.firstName || "User",
+        lastName: user.lastName,
+        imageUrl: user.imageUrl,
+        phoneNumber,
+        timestamp: new Date().toISOString(),
+        role: "customer"
+      });
+    } else {
+      // Update existing user's phone number
+      existingUser = await User.findOneAndUpdate(
+        { clerkId: userId },
+        { phoneNumber },
+        { new: true }
       );
     }
-    return NextResponse.json(
-      { error: "Failed to update user", details: "An unknown error occurred" },
-      { status: 500 }
-    );
+
+    return NextResponse.json(existingUser);
+  } catch (error) {
+    console.error("[USER_PHONE_UPDATE]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
 
