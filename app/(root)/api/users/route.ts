@@ -89,6 +89,7 @@ export async function POST(req: Request) {
       imageUrl: userData.imageUrl || "",
       role: userData.role || "customer",
       address: userData.address || "",
+      phoneNumber: "",
       timestamp: timestamp,
     });
 
