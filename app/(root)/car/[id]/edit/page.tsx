@@ -11,10 +11,12 @@ import {
   NotFoundScreen,
   PermissionDeniedScreen,
 } from "@/components/error";
+import { useRouter } from "next/navigation";
 
 export default function EditCarPage() {
   const { id } = useParams();
   const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [car, setCar] = useState<ICar | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +51,12 @@ export default function EditCarPage() {
     }
   }, [id, user]);
 
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push("/sign-in");
+    }
+  }, [isLoaded, user, router]);
+
   if (loading) return <LoadingScreen />;
   if (permissionDenied)
     return (
@@ -57,5 +65,17 @@ export default function EditCarPage() {
   if (error) return <ErrorScreen message={error} />;
   if (!car) return <NotFoundScreen />;
 
-  return <ManageCar initialData={car} isEditMode={true} />;
+  if (!isLoaded) {
+    return <LoadingScreen />;
+  }
+
+  if (!user) {
+    return null; // Will redirect in useEffect
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <ManageCar initialData={car} />
+    </div>
+  );
 }

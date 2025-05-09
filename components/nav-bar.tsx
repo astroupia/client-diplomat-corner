@@ -36,7 +36,9 @@ const NavBar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isVisible, setIsVisible] = useState<boolean>(true);
   const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const notificationCheckInterval = useRef<NodeJS.Timeout | null>(null);
   const lastCheckTime = useRef<Date>(new Date());
@@ -200,10 +202,17 @@ const NavBar: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !(event.target as HTMLElement).closest("[data-dropdown-trigger]")
+      ) {
+        setActiveDropdown(null);
+      }
+      if (
         searchRef.current &&
         !searchRef.current.contains(event.target as Node)
       ) {
-        setIsDropdownVisible(false); // Hide dropdown if clicked outside
+        setIsDropdownVisible(false);
       }
     };
 
@@ -228,34 +237,44 @@ const NavBar: React.FC = () => {
   const handleResultClick = () => {
     setIsDropdownVisible(false);
     setSearchQuery("");
-    handleMobileMenuClose();
+    setIsMobileMenuOpen(false);
+    setActiveDropdown(null);
   };
 
   // Define navigation items with conditional visibility
   const navItems: NavItem[] = [
     {
-      label: "Cars",
-      href: "/car",
+      label: "All Properties",
+      href: "#",
       name: "",
       type: "car",
+      children: [
+        {
+          label: "Cars",
+          href: "/car",
+          name: "",
+          type: "car",
+        },
+
+        {
+          label: "Houses",
+          href: "/house",
+          name: "",
+          type: "house",
+        },
+      ],
     },
     {
-      label: "Cars For Sale",
-      href: "/car-for-sale",
-      name: "",
-      type: "car",
-    },
-    {
-      label: "Houses",
-      href: "/house",
-      name: "",
-      type: "house",
-    },
-    {
-      label: "Houses For Rent",
+      label: "House For Rent",
       href: "/house-for-rent",
       name: "",
       type: "house",
+    },
+    {
+      label: "Car For Sale",
+      href: "/car-for-sale",
+      name: "",
+      type: "car",
     },
     {
       label: "About Us",
@@ -269,12 +288,6 @@ const NavBar: React.FC = () => {
       name: "",
       type: "car",
     },
-    // {
-    //   label: "Items For Sale",
-    //   href: "https://groups.google.com/g/diplomatcorner?pli=1",
-    //   name: "",
-    //   type: "car",
-    // },
   ];
 
   // Effect to setup notification polling and WebSocket connection
@@ -357,6 +370,10 @@ const NavBar: React.FC = () => {
     };
   }, [isLoaded, user]);
 
+  const handleDropdownClick = (label: string) => {
+    setActiveDropdown(activeDropdown === label ? null : label);
+  };
+
   return (
     <>
       {/* Overlay for mobile menu */}
@@ -406,15 +423,66 @@ const NavBar: React.FC = () => {
                 {navItems
                   .filter((item) => !item.isAuth || (item.isAuth && user))
                   .map((item) => (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className="hover:text-white/80 transition whitespace-nowrap relative group py-1"
-                      onClick={handleMobileMenuClose}
-                    >
-                      {item.label}
-                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
-                    </Link>
+                    <div key={item.label} className="relative group">
+                      {item.children ? (
+                        <>
+                          <button
+                            data-dropdown-trigger
+                            onClick={() => handleDropdownClick(item.label)}
+                            className="hover:text-white/80 transition whitespace-nowrap relative group py-1 flex items-center gap-1"
+                          >
+                            {item.label}
+                            <svg
+                              className={`w-4 h-4 transition-transform ${
+                                activeDropdown === item.label
+                                  ? "rotate-180"
+                                  : ""
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
+                          </button>
+                          {activeDropdown === item.label && (
+                            <div
+                              ref={dropdownRef}
+                              className="absolute top-full left-0 mt-1 py-2 bg-white rounded-lg shadow-lg w-48 z-50"
+                            >
+                              {item.children.map((child) => (
+                                <Link
+                                  key={child.label}
+                                  href={child.href}
+                                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-[#5B8F2D] transition-colors"
+                                  onClick={() => {
+                                    handleMobileMenuClose();
+                                    setActiveDropdown(null);
+                                  }}
+                                >
+                                  {child.label}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className="hover:text-white/80 transition whitespace-nowrap relative group py-1"
+                          onClick={handleMobileMenuClose}
+                        >
+                          {item.label}
+                          <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
+                        </Link>
+                      )}
+                    </div>
                   ))}
               </div>
 
@@ -540,14 +608,63 @@ const NavBar: React.FC = () => {
                   {navItems
                     .filter((item) => !item.isAuth || (item.isAuth && user))
                     .map((item) => (
-                      <Link
-                        key={item.label}
-                        href={item.href}
-                        className="hover:text-white/80 transition flex items-center"
-                        onClick={handleMobileMenuClose}
-                      >
-                        {item.label}
-                      </Link>
+                      <div key={item.label}>
+                        {item.children ? (
+                          <div className="space-y-2">
+                            <button
+                              onClick={() => handleDropdownClick(item.label)}
+                              className="flex items-center justify-between w-full hover:text-white/80 transition"
+                            >
+                              <span>{item.label}</span>
+                              <svg
+                                className={`w-4 h-4 transition-transform ${
+                                  activeDropdown === item.label
+                                    ? "rotate-180"
+                                    : ""
+                                }`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </button>
+                            {activeDropdown === item.label && (
+                              <div className="pl-4 space-y-2 border-l border-white/30">
+                                {item.children.map((child) => (
+                                  <Link
+                                    key={child.label}
+                                    href={child.href}
+                                    className="block hover:text-white/80 transition py-1"
+                                    onClick={() => {
+                                      setIsMobileMenuOpen(false);
+                                      setActiveDropdown(null);
+                                    }}
+                                  >
+                                    {child.label}
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <Link
+                            href={item.href}
+                            className="hover:text-white/80 transition flex items-center py-1"
+                            onClick={() => {
+                              setIsMobileMenuOpen(false);
+                              setActiveDropdown(null);
+                            }}
+                          >
+                            {item.label}
+                          </Link>
+                        )}
+                      </div>
                     ))}
 
                   {/* Search Component for Mobile */}

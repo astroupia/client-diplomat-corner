@@ -1,50 +1,88 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import * as AvatarPrimitive from "@radix-ui/react-avatar"
+import React, { useState } from "react";
+import Image from "next/image";
 
-import { cn } from "@/lib/utils"
+interface AvatarProps {
+  imageUrl?: string;
+  name: string;
+  role?: "admin" | "customer";
+  size?: "sm" | "md" | "lg";
+}
 
-const Avatar = React.forwardRef<
-  React.ElementRef<typeof AvatarPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Root
-    ref={ref}
-    className={cn(
-      "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
-      className
-    )}
-    {...props}
-  />
-))
-Avatar.displayName = AvatarPrimitive.Root.displayName
+const Avatar: React.FC<AvatarProps> = ({
+  imageUrl,
+  name,
+  role = "customer",
+  size = "sm",
+}) => {
+  const [imageError, setImageError] = useState(false);
 
-const AvatarImage = React.forwardRef<
-  React.ElementRef<typeof AvatarPrimitive.Image>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Image
-    ref={ref}
-    className={cn("aspect-square h-full w-full", className)}
-    {...props}
-  />
-))
-AvatarImage.displayName = AvatarPrimitive.Image.displayName
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
-const AvatarFallback = React.forwardRef<
-  React.ElementRef<typeof AvatarPrimitive.Fallback>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>
->(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Fallback
-    ref={ref}
-    className={cn(
-      "flex h-full w-full items-center justify-center rounded-full bg-muted",
-      className
-    )}
-    {...props}
-  />
-))
-AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
+  const sizeClasses = {
+    sm: "w-8 h-8 text-xs",
+    md: "w-10 h-10 text-sm",
+    lg: "w-12 h-12 text-base",
+  };
 
-export { Avatar, AvatarImage, AvatarFallback }
+  const getFallbackImage = () => {
+    if (role === "admin") {
+      return "/assets/images/admin-avatar.png";
+    }
+    return "/assets/images/anonymous-avatar.png";
+  };
+
+  const renderContent = () => {
+    // If there's a valid image URL and no loading error, try to show the image
+    if (imageUrl && !imageError) {
+      return (
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          className="object-cover"
+          sizes="(max-width: 48px) 100vw"
+          onError={() => setImageError(true)}
+        />
+      );
+    }
+
+    // If it's an admin, show admin fallback
+    if (role === "admin") {
+      return (
+        <div
+          className={`${sizeClasses[size]} flex items-center justify-center bg-primary text-white font-medium`}
+        >
+          <span>AD</span>
+        </div>
+      );
+    }
+
+    // Default case: show initials
+    return (
+      <div
+        className={`${sizeClasses[size]} flex items-center justify-center bg-[#5B8F2D] text-white font-medium`}
+      >
+        {getInitials(name)}
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className={`relative rounded-full overflow-hidden ${sizeClasses[size]} bg-gray-100 ring-2 ring-white`}
+    >
+      {renderContent()}
+    </div>
+  );
+};
+
+export default Avatar;

@@ -28,14 +28,14 @@ export default function ListingBanner({
         subtitle: "Find your perfect ride",
         icon: Car,
         bgImage: "/assets/images/car_preview.jpg",
-        bgColor: "from-primary/80 to-green-800/80",
+        bgColor: "from-primary/90 to-secondary/95",
       },
       house: {
         title: "Discover Properties",
         subtitle: "Find your dream home",
         icon: Home,
         bgImage: "/assets/images/house_preview.jpg",
-        bgColor: "from-primary/80 to-green-800/80",
+        bgColor: "from-primary/90 to-secondary/95",
       },
     };
 
