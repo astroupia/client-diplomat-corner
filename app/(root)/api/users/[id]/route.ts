@@ -9,11 +9,6 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     await connectToDatabase();
 
     const { id } = params;
@@ -27,14 +22,27 @@ export async function GET(
     const user = await User.findOne(query);
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json({ user });
+    // Return only necessary public information
+    return NextResponse.json({
+      success: true,
+      user: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        imageUrl: user.imageUrl,
+        role: user.role,
+      },
+    });
   } catch (error) {
     console.error("Error fetching user:", error);
     return NextResponse.json(
       {
+        success: false,
         error: "Failed to fetch user",
         details: error instanceof Error ? error.message : "Unknown error",
       },
@@ -43,7 +51,7 @@ export async function GET(
   }
 }
 
-// Update specific user by ID
+// Update specific user by ID - requires authentication
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
@@ -51,7 +59,10 @@ export async function PATCH(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     await connectToDatabase();
@@ -68,7 +79,10 @@ export async function PATCH(
     const user = await User.findOne(query);
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
     }
 
     // Update only provided fields
@@ -84,13 +98,20 @@ export async function PATCH(
     await user.save();
 
     return NextResponse.json({
+      success: true,
       message: "User updated successfully",
-      user,
+      user: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        imageUrl: user.imageUrl,
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error("Error updating user:", error);
     return NextResponse.json(
       {
+        success: false,
         error: "Failed to update user",
         details: error instanceof Error ? error.message : "Unknown error",
       },
@@ -99,7 +120,7 @@ export async function PATCH(
   }
 }
 
-// Delete specific user by ID
+// Delete specific user by ID - requires authentication
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
@@ -107,7 +128,10 @@ export async function DELETE(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     await connectToDatabase();
@@ -123,23 +147,27 @@ export async function DELETE(
     const deletedUser = await User.findOneAndDelete(query);
 
     if (!deletedUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({
+      success: true,
       message: "User deleted successfully",
       user: {
         id: deletedUser._id,
-        clerkId: deletedUser.clerkId,
-        email: deletedUser.email,
         firstName: deletedUser.firstName,
         lastName: deletedUser.lastName,
+        role: deletedUser.role,
       },
     });
   } catch (error) {
     console.error("Error deleting user:", error);
     return NextResponse.json(
       {
+        success: false,
         error: "Failed to delete user",
         details: error instanceof Error ? error.message : "Unknown error",
       },
