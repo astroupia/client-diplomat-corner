@@ -10,10 +10,18 @@ import PermissionDeniedScreen from "@/components/error/permission-denied";
 import ErrorScreen from "@/components/error/loading-screen";
 import NotFoundScreen from "@/components/error/not-found-screen";
 import LoadingComponent from "@/components/ui/loading-component";
+import { useRouter } from "next/navigation";
 
-export default function EditHousePage() {
+interface EditHousePageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function EditHousePage({ params }: EditHousePageProps) {
   const { id } = useParams();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [house, setHouse] = useState<IHouse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +56,20 @@ export default function EditHousePage() {
     }
   }, [id, user]);
 
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push("/sign-in");
+    }
+  }, [isLoaded, user, router]);
+
+  if (!isLoaded) {
+    return <LoadingScreen />;
+  }
+
+  if (!user) {
+    return null; // Will redirect in useEffect
+  }
+
   if (loading) return <LoadingComponent />;
   if (permissionDenied)
     return (
@@ -56,5 +78,10 @@ export default function EditHousePage() {
   if (error) return <ErrorScreen message={error} />;
   if (!house) return <NotFoundScreen />;
 
-  return <ManageHouse initialData={house} isEditMode={true} />;
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Edit House Listing</h1>
+      <ManageHouse initialData={house} />
+    </div>
+  );
 }

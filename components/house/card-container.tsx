@@ -2,12 +2,20 @@
 
 import CardHouse from "@/components/house/card-house";
 import type { IHouse } from "@/lib/models/house.model";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import LoadingSkeleton from "@/app/(root)/house/loading";
-import { useAuth } from "@clerk/nextjs";
-import { ChevronDown, Filter, House, SlidersHorizontal } from "lucide-react";
+import { useAuth, useUser } from "@clerk/nextjs";
+import {
+  ChevronDown,
+  Filter,
+  House,
+  SlidersHorizontal,
+  Check,
+  Loader2,
+} from "lucide-react";
 import FilterSection from "../filter-section";
 import ListingBanner from "../listing-banner";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CardContainerProps {
   advertisementType?: string;
@@ -15,131 +23,97 @@ interface CardContainerProps {
 
 const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const { userId } = useAuth();
+  const { user } = useUser();
   const [houses, setHouses] = useState<IHouse[]>([]);
   const [userHouses, setUserHouses] = useState<IHouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [displayLimit, setDisplayLimit] = useState(6);
+  const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const itemsPerPage = 10;
   const [sortOrder, setSortOrder] = useState<string>("Default");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [fullHouses, setFullHouses] = useState<IHouse[]>([]);
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement>(null);
 
-  // Filter options for properties
-  const filterOptions = [
-    { value: "Default", label: "Sort: Default" },
+  // Sort options
+  const sortOptions = [
+    { value: "Default", label: "Default" },
     { value: "Price Low to High", label: "Price: Low to High" },
     { value: "Price High to Low", label: "Price: High to Low" },
     { value: "Size Small to Large", label: "Size: Small to Large" },
     { value: "Size Large to Small", label: "Size: Large to Small" },
-    { value: "Bedrooms (Ascending)", label: "Bedrooms: Fewest First" },
-    { value: "Bedrooms (Descending)", label: "Bedrooms: Most First" },
   ];
 
-  // Additional filter chips
-  const filterChips = [
+  // Filter options for properties
+  const filterOptions = [
+    // Advertisement type filters
+    { value: "For Rent", label: "For Rent" },
+    { value: "For Sale", label: "For Sale" },
+    // House type filters
+    { value: "House", label: "House" },
+    { value: "Apartment", label: "Apartment" },
+    { value: "Guest House", label: "Guest House" },
+    // Bedroom filters
     { value: "1-bedroom", label: "1 Bedroom" },
     { value: "2-bedroom", label: "2 Bedrooms" },
     { value: "3-bedroom", label: "3+ Bedrooms" },
+    // Features filters
     { value: "parking", label: "Parking" },
-    { value: "furnished", label: "Furnished" },
+    { value: "WiFi", label: "WiFi" },
+    { value: "Furnished", label: "Furnished" },
+    { value: "Gym", label: "Gym" },
+    { value: "Outdoor", label: "Outdoor" },
+    { value: "Dining Area", label: "Dining Area" },
   ];
 
-  const allFilterOptions = [...filterOptions, ...filterChips];
+  const allFilterOptions = [...filterOptions];
 
   useEffect(() => {
     const fetchHouses = async () => {
       try {
-        const response = await fetch("/api/house", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `/api/house?page=${currentPage}&limit=${itemsPerPage}${
+            advertisementType ? `&advertisementType=${advertisementType}` : ""
+          }`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        // Debug logging
-        console.log("Houses API Response:", data);
-
-        // Check for new response format (matching cars API)
-        if (data && data.success && Array.isArray(data.houses)) {
+        if (data.success && Array.isArray(data.houses)) {
           // Filter out pending houses - only show active listings
           const activeHouses = data.houses.filter(
             (house: IHouse) => house.status === "Active"
           );
 
-          // Apply advertisement type filter if provided
-          let filteredHouses = activeHouses;
-          if (advertisementType) {
-            filteredHouses = activeHouses.filter(
-              (house: IHouse) => house.advertisementType === advertisementType
-            );
-            console.log(
-              `Filtered to ${filteredHouses.length} houses with advertisementType: ${advertisementType}`
-            );
-          }
-
-          // Debug logging
-          console.log(
-            `Found ${filteredHouses.length} active houses out of ${data.houses.length} total houses`
-          );
-
           // Separate user houses from all houses
           if (userId) {
-            const userOwnedHouses = filteredHouses.filter(
-              (house: IHouse) => house.userId === userId
-            );
-            setUserHouses(userOwnedHouses);
-            console.log(
-              `Found ${userOwnedHouses.length} houses owned by the current user`
-            );
-          }
-
-          setHouses(filteredHouses);
-          setFullHouses(filteredHouses); // Store the full set of houses for filtering
-          setHasMore(filteredHouses.length > displayLimit);
-        }
-        // Fallback for old response format (direct array)
-        else if (Array.isArray(data)) {
-          // Filter out pending houses - only show active listings
-          const activeHouses = data.filter(
-            (house: IHouse) => house.status === "Active"
-          );
-
-          // Apply advertisement type filter if provided
-          let filteredHouses = activeHouses;
-          if (advertisementType) {
-            filteredHouses = activeHouses.filter(
-              (house: IHouse) => house.advertisementType === advertisementType
-            );
-            console.log(
-              `Filtered to ${filteredHouses.length} houses with advertisementType: ${advertisementType}`
-            );
-          }
-
-          // Debug logging
-          console.log(
-            `Found ${filteredHouses.length} active houses out of ${data.length} total houses (old format)`
-          );
-
-          // Separate user houses from all houses
-          if (userId) {
-            const userOwnedHouses = filteredHouses.filter(
+            const userOwnedHouses = activeHouses.filter(
               (house: IHouse) => house.userId === userId
             );
             setUserHouses(userOwnedHouses);
           }
 
-          setHouses(filteredHouses);
-          setFullHouses(filteredHouses); // Store the full set of houses for filtering
-          setHasMore(filteredHouses.length > displayLimit);
+          if (currentPage === 1) {
+            setHouses(activeHouses);
+          } else {
+            setHouses((prevHouses) => [...prevHouses, ...activeHouses]);
+          }
+
+          setHasMore(data.pagination?.hasMore || false);
         } else {
-          console.error("Unexpected API response format:", data);
           throw new Error("Invalid data format: Expected houses data");
         }
       } catch (error) {
@@ -147,31 +121,55 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
         setError((error as Error).message);
       } finally {
         setLoading(false);
+        setIsLoadingMore(false);
       }
     };
 
     fetchHouses();
-  }, [userId, displayLimit, advertisementType]);
+  }, [userId, currentPage, advertisementType]);
+
+  // Add click outside handler for sort dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        selectRef.current &&
+        !selectRef.current.contains(event.target as Node)
+      ) {
+        setIsSelectOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Get current sort option label
+  const getCurrentSortLabel = () => {
+    const option = sortOptions.find((option) => option.value === sortOrder);
+    return option ? option.label : "Sort By";
+  };
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
     let sortedHouses = [...houses];
 
-    if (value === "Price Low to High") {
-      sortedHouses.sort((a, b) => a.price - b.price);
-    } else if (value === "Price High to Low") {
-      sortedHouses.sort((a, b) => b.price - a.price);
-    } else if (value === "Size Small to Large") {
-      sortedHouses.sort((a, b) => a.size - b.size);
-    } else if (value === "Size Large to Small") {
-      sortedHouses.sort((a, b) => b.size - a.size);
-    } else if (value === "Bedrooms (Ascending)") {
-      sortedHouses.sort((a, b) => a.bedroom - b.bedroom);
-    } else if (value === "Bedrooms (Descending)") {
-      sortedHouses.sort((a, b) => b.bedroom - a.bedroom);
-    } else {
-      sortedHouses = [...houses];
+    switch (value) {
+      case "Price Low to High":
+        sortedHouses.sort((a, b) => a.price - b.price);
+        break;
+      case "Price High to Low":
+        sortedHouses.sort((a, b) => b.price - a.price);
+        break;
+      case "Size Small to Large":
+        sortedHouses.sort((a, b) => a.size - b.size);
+        break;
+      case "Size Large to Small":
+        sortedHouses.sort((a, b) => b.size - a.size);
+        break;
+      default:
+        // Default sorting (restore original order)
+        sortedHouses = [...fullHouses];
     }
+
     setHouses(sortedHouses);
   };
 
@@ -179,92 +177,49 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     setActiveFilters(filters);
     if (filters.length === 0) {
       setHouses(fullHouses);
-    } else {
-      // Apply multiple filter conditions
-      const filteredHouses = fullHouses.filter((house) => {
-        // Each filter can be from different categories
-        return filters.some((filter) => {
-          // Check advertisement type filters
-          if (filter === "For Rent") {
-            return house.advertisementType === "Rent";
-          }
-          if (filter === "For Sale") {
-            return house.advertisementType === "Sale";
-          }
-
-          // Check bedroom filters
-          if (filter === "1-bedroom") {
-            return house.bedroom === 1;
-          }
-          if (filter === "2-bedroom") {
-            return house.bedroom === 2;
-          }
-          if (filter === "3-bedroom") {
-            return house.bedroom >= 3;
-          }
-
-          // Check essentials filters
-          if (
-            filter === "WiFi" ||
-            filter === "Gym" ||
-            filter === "Furnished" ||
-            filter === "Play Ground" ||
-            filter === "Outdoor" ||
-            filter === "Dining Area" ||
-            filter === "Jacuzzi" ||
-            filter === "Steam"
-          ) {
-            return house.essentials && house.essentials.includes(filter);
-          }
-
-          // Check parking filter
-          if (filter === "parking") {
-            return house.parkingSpace > 0;
-          }
-
-          // Check house type filters
-          if (
-            filter === "House" ||
-            filter === "Apartment" ||
-            filter === "Guest House"
-          ) {
-            return house.houseType === filter;
-          }
-
-          return false;
-        });
-      });
-
-      setHouses(filteredHouses);
+      return;
     }
-  };
 
-  // Create comprehensive filter options
-  const getFilterOptions = () => {
-    // Advertisement type filters - add these at the top
-    const adTypeFilters = [
-      { value: "For Rent", label: "For Rent" },
-      { value: "For Sale", label: "For Sale" },
-    ];
+    // Apply multiple filter conditions
+    const filteredHouses = fullHouses.filter((house) => {
+      return filters.some((filter) => {
+        // Check advertisement type filters
+        if (filter === "For Rent") return house.advertisementType === "Rent";
+        if (filter === "For Sale") return house.advertisementType === "Sale";
 
-    // Features filters
-    const featureFilters = [
-      { value: "parking", label: "Parking" },
-      { value: "WiFi", label: "WiFi" },
-      { value: "Furnished", label: "Furnished" },
-      { value: "Gym", label: "Gym" },
-      { value: "Outdoor", label: "Outdoor" },
-      { value: "Dining Area", label: "Dining Area" },
-    ];
+        // Check house type filters
+        if (["House", "Apartment", "Guest House"].includes(filter)) {
+          return house.houseType === filter;
+        }
 
-    // House type filters
-    const houseTypeFilters = [
-      { value: "House", label: "House" },
-      { value: "Apartment", label: "Apartment" },
-      { value: "Guest House", label: "Guest House" },
-    ];
+        // Check bedroom filters
+        if (filter === "1-bedroom") return house.bedroom === 1;
+        if (filter === "2-bedroom") return house.bedroom === 2;
+        if (filter === "3-bedroom") return house.bedroom >= 3;
 
-    return [...adTypeFilters, ...featureFilters, ...houseTypeFilters];
+        // Check features
+        if (
+          [
+            "parking",
+            "WiFi",
+            "Furnished",
+            "Gym",
+            "Outdoor",
+            "Dining Area",
+          ].includes(filter)
+        ) {
+          return house.essentials?.includes(filter);
+        }
+
+        return false;
+      });
+    });
+
+    setHouses(filteredHouses);
+    // After filtering, apply current sort if it's not default
+    if (sortOrder !== "Default") {
+      handleSortChange(sortOrder);
+    }
   };
 
   // Handle search result selection
@@ -280,7 +235,10 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   };
 
   const loadMore = () => {
-    setDisplayLimit((prev) => prev + 6);
+    if (!isLoadingMore && hasMore) {
+      setIsLoadingMore(true);
+      setCurrentPage((prev) => prev + 1);
+    }
   };
 
   if (loading) {
@@ -295,71 +253,181 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     );
   }
 
-  const displayedHouses = houses.slice(0, displayLimit);
+  const displayedHouses = houses.slice(0, currentPage * itemsPerPage);
 
   return (
-    <>
-      <div className="container mx-auto pb-10">
-        {!advertisementType && <ListingBanner type="house" />}
-
-        {/* Filter Section */}
-        <div className="pt-10 pb-5">
-          <FilterSection
-            sortOrder={sortOrder}
-            onSortChange={handleSortChange}
-            filterOptions={getFilterOptions()}
-            activeFilters={activeFilters}
-            onFilterChange={handleFilterChange}
-            onSearchResultSelect={handleSearchResultSelect}
-            showSearchResults={true}
-            modelType="house"
-          />
-        </div>
-
-        {/* User's Listings Section */}
-        {userId && userHouses.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">
-              Your Listings
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {userHouses.map((house) => (
-                <CardHouse key={house._id} {...house} />
-              ))}
+    <div className="w-full">
+      {/* Filter and Sort Section */}
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-200 relative z-30">
+        <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-4 px-2 py-4">
+          <ListingBanner type="house" title="Houses" />
+          <div className="py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setFilterOpen(!filterOpen)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B8F2D]"
+              >
+                <Filter className="w-4 h-4" />
+                Filters
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    filterOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              <div className="text-sm text-gray-500">
+                {houses.length} {houses.length === 1 ? "house" : "houses"} found
+              </div>
             </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative z-40" ref={selectRef}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsSelectOpen(!isSelectOpen)}
+                className="flex items-center justify-between gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 hover:border-green-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500/20 group min-w-[180px]"
+              >
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal
+                    size={16}
+                    className="text-gray-500 group-hover:text-green-500 transition-colors"
+                  />
+                  <span className="font-medium">{getCurrentSortLabel()}</span>
+                </div>
+                <ChevronDown
+                  size={16}
+                  className={`text-gray-500 transition-transform duration-300 ${
+                    isSelectOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </motion.button>
+
+              <AnimatePresence>
+                {isSelectOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
+                    style={{
+                      minWidth: "220px",
+                      maxHeight: "300px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    <div className="py-1">
+                      {sortOptions.map((option) => (
+                        <motion.button
+                          key={option.value}
+                          whileHover={{
+                            x: 4,
+                            backgroundColor: "rgba(34, 197, 94, 0.05)",
+                          }}
+                          onClick={() => {
+                            handleSortChange(option.value);
+                            setIsSelectOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 flex items-center justify-between ${
+                            sortOrder === option.value
+                              ? "bg-green-50 text-green-600"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          <span>{option.label}</span>
+                          {sortOrder === option.value && (
+                            <motion.div
+                              initial={{ scale: 0, rotate: -45 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 500,
+                                damping: 30,
+                              }}
+                              className="bg-green-100 rounded-full p-0.5"
+                            >
+                              <Check size={14} className="text-green-600" />
+                            </motion.div>
+                          )}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+          {filterOpen && (
+            <div className="mt-4">
+              <FilterSection
+                sortOrder={sortOrder}
+                onSortChange={handleSortChange}
+                filterOptions={filterOptions}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterChange}
+                onSearchResultSelect={handleSearchResultSelect}
+                showSearchResults={true}
+                modelType="house"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-4 px-2 py-6 relative z-0">
+        {/* Listing Banner */}
+        {userId && userHouses.length > 0 && (
+          <div className="mb-8">
+            <ListingBanner
+              type="house"
+              title="Your Listed Properties"
+              subtitle="Manage and view your listed properties"
+            />
           </div>
         )}
 
-        {/* All Listings Section */}
-        <h2 className="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">
-          All Available Properties
-        </h2>
-        {displayedHouses.length > 0 ? (
+        {/* Cards Grid */}
+        {loading && currentPage === 1 ? (
+          <LoadingSkeleton />
+        ) : error ? (
+          <div className="text-center text-red-500">{error}</div>
+        ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayedHouses.map((house) => (
-                <CardHouse key={house._id} {...house} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+              {houses.map((house) => (
+                <CardHouse
+                  key={house._id}
+                  {...house}
+                  listedBy={user?.firstName || "Unknown User"}
+                />
               ))}
             </div>
 
+            {/* Load More Button */}
             {hasMore && (
-              <div className="text-center mt-8">
+              <div className="mt-8 flex justify-center">
                 <button
                   onClick={loadMore}
-                  className="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
+                  disabled={isLoadingMore}
+                  className={`px-6 py-3 text-sm font-medium text-white bg-[#5B8F2D] rounded-lg hover:bg-[#4A7324] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B8F2D] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
                 >
-                  Load More
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load More"
+                  )}
                 </button>
               </div>
             )}
           </>
-        ) : (
-          <p className="text-center py-10 text-gray-500">
-            No properties available.
-          </p>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

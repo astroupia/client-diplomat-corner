@@ -17,6 +17,12 @@ interface ApiResponse {
   carId?: string;
   paymentId?: string;
   cars?: (typeof Car)[];
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    hasMore: boolean;
+  };
 }
 
 async function uploadImage(
@@ -77,6 +83,9 @@ export async function GET(
     const userId = searchParams.get("userId");
     const status = searchParams.get("status");
     const visibility = searchParams.get("visibility");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
 
     const query: Record<string, string> = {};
     if (userId) query.userId = userId;
@@ -85,12 +94,26 @@ export async function GET(
 
     console.log("Car API Query:", query);
 
-    const cars = await Car.find(query).sort({ createdAt: -1 });
-    console.log(`Found ${cars.length} cars in the database`);
+    // Get total count for pagination
+    const totalCount = await Car.countDocuments(query);
+
+    // Get paginated results
+    const cars = await Car.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    console.log(`Found ${cars.length} cars in the database (page ${page})`);
 
     return NextResponse.json({
       success: true,
       cars,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        hasMore: skip + cars.length < totalCount,
+      },
     });
   } catch (error) {
     console.error("Error fetching cars:", error);

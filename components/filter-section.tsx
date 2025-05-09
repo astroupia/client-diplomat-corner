@@ -365,7 +365,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
 
             {/* Sort Dropdown - Desktop */}
             <div className="hidden md:block relative z-20" ref={selectRef}>
-              <motion.button
+              {/*<motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setIsSelectOpen(!isSelectOpen)}
@@ -384,9 +384,9 @@ const FilterSection: React.FC<FilterSectionProps> = ({
                     isSelectOpen ? "rotate-180" : ""
                   }`}
                 />
-              </motion.button>
+              </motion.button> */}
 
-              <AnimatePresence>
+              {/* <AnimatePresence>
                 {isSelectOpen && (
                   <motion.div
                     initial={{ opacity: 0, y: 8, scale: 0.95 }}
@@ -438,7 +438,7 @@ const FilterSection: React.FC<FilterSectionProps> = ({
                     </div>
                   </motion.div>
                 )}
-              </AnimatePresence>
+              </AnimatePresence>*/}
             </div>
 
             {/* Sort Dropdown - Mobile */}

@@ -161,6 +161,7 @@ export default function SignInPage() {
                         footer: "text-center",
                       },
                     }}
+                    redirectUrl="/"
                   />
                 </motion.div>
 

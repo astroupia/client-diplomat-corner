@@ -92,6 +92,7 @@ export default function SignUpPage() {
                         footer: "text-center",
                       },
                     }}
+                    redirectUrl="/"
                   />
                 </motion.div>
                 {/* Trust indicators */}

@@ -1,64 +1,31 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Define the role interface
-interface PublicMetadata {
-  role?: string;
-}
+// This example protects all routes including api/trpc routes
+// Please edit this to allow other routes to be public as needed.
+// See https://clerk.com/docs/references/nextjs/auth-middleware for more information about configuring your middleware
 
-// This function will handle admin route protection
-async function handleAdminRoute(req: NextRequest) {
-  try {
-    // Get the session from the cookie
-    const sessionId = req.cookies.get("__session")?.value;
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/car",
+  "/house",
+  "/car-for-sale",
+  "/house-for-rent",
+  "/about-us",
+  "/contact-us",
+  "/api/cars",
+  "/api/house",
+  "/api/users(.*)",
+  "/api/webhook(.*)",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
 
-    if (!sessionId) {
-      return NextResponse.redirect(new URL("/sign-in", req.url));
-    }
-
-    return NextResponse.next();
-  } catch (error) {
-    console.error("Admin route protection error:", error);
-    return NextResponse.redirect(new URL("/sign-in", req.url));
-  }
-}
-
-// Export middleware with custom error handling
 export default clerkMiddleware(async (auth, req) => {
-  try {
-    // Check if the request is for an admin route
-    if (req.nextUrl.pathname.startsWith("/admin-shield")) {
-      // Get the auth state - will resolve to auth.userId
-      const { userId } = await auth();
-
-      if (!userId) {
-        return NextResponse.redirect(new URL("/sign-in", req.url));
-      }
-
-      // If authenticated but accessing admin landing
-      if (req.nextUrl.pathname === "/admin-shield") {
-        return NextResponse.redirect(
-          new URL("/admin-shield/admin/dashboard", req.url)
-        );
-      }
-    }
-
-    // For all other routes, proceed normally
-    return NextResponse.next();
-  } catch (error) {
-    console.error("Clerk middleware error:", error);
-
-    // Handle JWT verification errors gracefully
-    if (req.nextUrl.pathname.startsWith("/admin-shield")) {
-      return NextResponse.redirect(new URL("/sign-in", req.url));
-    }
-
-    // For other pages, just continue to the page which will handle auth state client-side
-    return NextResponse.next();
+  if (!isPublicRoute(req)) {
+    await auth.protect();
   }
 });
 
 export const config = {
-  matcher: ["/((?!_next|static|.*\\..*|api|trpc).*)", "/", "/(api|trpc)(.*)"],
+  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
 };

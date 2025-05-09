@@ -4,7 +4,21 @@ import { NextRequest, NextResponse } from "next/server";
 import House from "@/lib/models/house.model";
 import { connectToDatabase } from "@/lib/db-connect";
 
-export async function GET(req: NextRequest) {
+interface ApiResponse {
+  success: boolean;
+  error?: string;
+  houses?: (typeof House)[];
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    hasMore: boolean;
+  };
+}
+
+export async function GET(
+  req: NextRequest
+): Promise<NextResponse<ApiResponse>> {
   try {
     await connectToDatabase();
 
@@ -12,6 +26,9 @@ export async function GET(req: NextRequest) {
     const userId = searchParams.get("userId");
     const status = searchParams.get("status");
     const visibility = searchParams.get("visibility");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
 
     const query: Record<string, string> = {};
     if (userId) query.userId = userId;
@@ -20,12 +37,27 @@ export async function GET(req: NextRequest) {
 
     console.log("House API Query:", query);
 
-    const houses = await House.find(query).sort({ createdAt: -1 }).lean(); // Use .lean() for plain JS objects
-    console.log(`Found ${houses.length} houses in the database`);
+    // Get total count for pagination
+    const totalCount = await House.countDocuments(query);
+
+    // Get paginated results
+    const houses = await House.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(); // Use .lean() for plain JS objects
+
+    console.log(`Found ${houses.length} houses in the database (page ${page})`);
 
     return NextResponse.json({
       success: true,
-      houses: houses,
+      houses,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        hasMore: skip + houses.length < totalCount,
+      },
     });
   } catch (error) {
     console.error("Error fetching houses:", error);

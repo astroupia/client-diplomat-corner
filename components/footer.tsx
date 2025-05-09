@@ -49,8 +49,11 @@ const footerSections: FooterSection[] = [
     links: [
       { label: "Shop Car", href: "/car" },
       { label: "Shop House", href: "/house" },
-      { label: "Grocery", href: "#" },
-      { label: "Items For Sale", href: "#" },
+      { label: "Grocery", href: "http://www.kedamegebeya.com/?v=ae41a6d38b78" },
+      {
+        label: "Items For Sale",
+        href: "https://groups.google.com/g/diplomatcorner",
+      },
     ],
   },
   {
