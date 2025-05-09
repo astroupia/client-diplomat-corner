@@ -12,12 +12,20 @@ const isPublicRoute = createRouteMatcher([
   "/house-for-rent",
   "/about-us",
   "/contact-us",
-  "/api/cars",
-  "/api/house",
+  "/api/cars(.*)",
+  "/api/house(.*)",
+  "/api/reviews(.*)",
+  "/api/requests(.*)",
+  "/api/messages(.*)",
+  "/api/notifications(.*)",
+  "/api/reports(.*)",
+  "/api/search(.*)",
   "/api/users(.*)",
   "/api/webhook(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/car/:id",
+  "/house/:id",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
