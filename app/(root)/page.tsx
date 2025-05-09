@@ -24,6 +24,9 @@ import {
   Zap,
 } from "lucide-react";
 import { useCallback } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { PhoneNumberPopup } from "@/components/PhoneNumberPopup";
+import User from "@/lib/models/user.model";
 
 // Dynamic Advertisement Component
 const AdvertPlaceholder = ({
@@ -797,6 +800,42 @@ const WhyChooseUs = () => {
 
 // Home Component
 export default function Home() {
+  const { isSignedIn, userId } = useAuth();
+  const [showPhonePopup, setShowPhonePopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUserPhone = async () => {
+      if (isSignedIn && userId) {
+        try {
+          const response = await fetch(`/api/users?clerkId=${userId}`);
+          if (!response.ok) {
+            throw new Error("Failed to fetch user data");
+          }
+          const data = await response.json();
+          const user = data.users?.[0];
+          
+          // Show popup if user exists but doesn't have a phone number
+          if (user && (!user.phoneNumber || user.phoneNumber === "")) {
+            setShowPhonePopup(true);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    checkUserPhone();
+  }, [isSignedIn, userId]);
+
+  if (isLoading) {
+    return null; // or a loading spinner
+  }
+
   return (
     <div className="bg-white">
       <div className="px-1 sm:px-3 lg:px-5 xl:px-6 mx-auto">
@@ -806,6 +845,10 @@ export default function Home() {
         <WhyChooseUs />
         <ServicesSection />
       </div>
+      <PhoneNumberPopup 
+        isOpen={showPhonePopup} 
+        onClose={() => setShowPhonePopup(false)} 
+      />
     </div>
   );
 }

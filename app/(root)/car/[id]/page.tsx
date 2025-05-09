@@ -21,6 +21,7 @@ import { ContactSellerDialog } from "@/components/dialogs";
 import { CarDetailLoadingSkeleton } from "@/components/loading-effects";
 import { ReviewsSection } from "@/components/reviews";
 import { motion, AnimatePresence } from "framer-motion";
+import type { IUser } from "@/lib/models/user.model";
 
 const paymentMethodLabels: Record<string, string> = {
   Daily: "Daily",
@@ -34,6 +35,7 @@ export default function CarDetails() {
   const router = useRouter();
   const id = params.id as string;
   const [car, setCar] = useState<ICar | null>(null);
+  const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -41,9 +43,10 @@ export default function CarDetails() {
   // State for image carousel
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-
+  console.log(user);
+  console.log(user?.phoneNumber);
   useEffect(() => {
-    const fetchCar = async () => {
+    const fetchCarAndUser = async () => {
       try {
         const response = await fetch(`/api/cars/${id}`);
         if (!response.ok) {
@@ -51,6 +54,15 @@ export default function CarDetails() {
         }
         const data = await response.json();
         setCar(data);
+
+        // Fetch user data if car exists
+        if (data.userId) {
+          const userResponse = await fetch(`/api/users/${data.userId}`);
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            setUser(userData.user);
+          }
+        }
 
         // Set up image URLs array
         if (data.imageUrls && data.imageUrls.length > 0) {
@@ -66,7 +78,7 @@ export default function CarDetails() {
         setLoading(false);
       }
     };
-    if (id) fetchCar();
+    if (id) fetchCarAndUser();
   }, [id]);
 
   const nextImage = () => {
@@ -446,19 +458,26 @@ export default function CarDetails() {
             </div>
           </div>
 
-          <button
-            onClick={() => setIsDialogOpen(true)}
-            className="w-full bg-primary text-white font-semibold py-3 px-6 rounded-md hover:bg-primary/80 transition-colors duration-200"
-          >
-            Inquire Now
-          </button>
-          {/* Contact Seller Dialog */}
-          <ContactSellerDialog
-            isOpen={isDialogOpen}
-            onClose={() => setIsDialogOpen(false)}
-            productType="car"
-            sellerName="the seller"
-          />
+          {/* Contact section - Conditional rendering based on advertisement type and user role */}
+          {user && user.role !== "admin" && (
+            <div className="mt-8">
+              {car.advertisementType === "Rent" ? (
+                <button
+                  onClick={() => setIsDialogOpen(true)}
+                  className="w-full bg-primary text-white font-semibold py-3 px-6 rounded-md hover:bg-primary/80 transition-colors duration-200"
+                >
+                  Inquire Now
+                </button>
+              ) : (
+                user.phoneNumber && (
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Contact Seller</h3>
+                    <p className="text-gray-600">Phone: {user.phoneNumber}</p>
+                  </div>
+                )
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -479,6 +498,14 @@ export default function CarDetails() {
           sellerId={car.userId}
         />
       </div>
+
+      {/* Contact Seller Dialog */}
+      <ContactSellerDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        productType="car"
+        sellerName="the seller"
+      />
     </div>
   );
 }
