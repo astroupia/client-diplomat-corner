@@ -22,6 +22,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { IHouse } from "@/lib/models/house.model";
+import type { IUser } from "@/lib/models/user.model";
 import ContactSellerDialog from "@/components/dialogs/contact-seller-dialog";
 import HouseDetailLoadingSkeleton from "@/components/loading-effects/id-loading-house";
 import ReviewsSection from "@/components/reviews/reviews-section";
@@ -38,6 +39,7 @@ export default function HouseDetails() {
   const router = useRouter();
   const id = params.id as string;
   const [house, setHouse] = useState<IHouse | null>(null);
+  const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -47,7 +49,7 @@ export default function HouseDetails() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchHouse = async () => {
+    const fetchHouseAndUser = async () => {
       try {
         const response = await fetch(`/api/house/${id}`);
         if (!response.ok) {
@@ -55,6 +57,15 @@ export default function HouseDetails() {
         }
         const data = await response.json();
         setHouse(data);
+
+        // Fetch user data if house exists
+        if (data.userId) {
+          const userResponse = await fetch(`/api/users/${data.userId}`);
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            setUser(userData.user);
+          }
+        }
 
         // Set up image URLs array
         if (data.imageUrls && data.imageUrls.length > 0) {
@@ -70,7 +81,7 @@ export default function HouseDetails() {
         setLoading(false);
       }
     };
-    if (id) fetchHouse();
+    if (id) fetchHouseAndUser();
   }, [id]);
 
   const nextImage = () => {
@@ -483,20 +494,13 @@ export default function HouseDetails() {
             </div>
           </div>
 
-          <button
-            onClick={() => setIsDialogOpen(true)}
-            className="w-full bg-primary text-white font-semibold py-3 px-6 rounded-md hover:bg-primary/80 transition-colors duration-200"
-          >
-            Inquire Now
-          </button>
-
-          {/* Contact Seller Dialog */}
-          <ContactSellerDialog
-            isOpen={isDialogOpen}
-            onClose={() => setIsDialogOpen(false)}
-            productType="house"
-            sellerName="the seller"
-          />
+          {/* Replace the button and dialog with conditional contact information */}
+          {user && user.role !== "admin" && user.phoneNumber && (
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Contact Seller</h3>
+              <p className="text-gray-600">Phone: {user.phoneNumber}</p>
+            </div>
+          )}
         </div>
       </div>
 
