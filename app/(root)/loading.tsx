@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
-    <div className="animate-pulse">
+    <div className="animate-pulse w-full">
       <section className="pt-2 sm:pt-3 md:pt-4">
         <MaxWidthWrapper className="px-2 sm:px-4">
           <div className="grid grid-cols-1 lg:grid-cols-12 sm:gap-6">

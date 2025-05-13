@@ -802,7 +802,6 @@ const WhyChooseUs = () => {
 export default function Home() {
   const { isSignedIn, userId } = useAuth();
   const [showPhonePopup, setShowPhonePopup] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkUserPhone = async () => {
@@ -821,20 +820,12 @@ export default function Home() {
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
-        } finally {
-          setIsLoading(false);
         }
-      } else {
-        setIsLoading(false);
       }
     };
 
     checkUserPhone();
   }, [isSignedIn, userId]);
-
-  if (isLoading) {
-    return null; // or a loading spinner
-  }
 
   return (
     <div className="bg-white">

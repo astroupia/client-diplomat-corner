@@ -1,14 +1,14 @@
 import { connectToDatabase } from "@/lib/db-connect";
-import Car from "@/lib/models/car.model";
+import Car, { ICar } from "@/lib/models/car.model";
 import { NextRequest, NextResponse } from "next/server";
 import Payment from "@/lib/models/payment.model";
 import { auth } from "@clerk/nextjs/server";
 import { v4 as uuidv4 } from "uuid";
 
-const CPANEL_API_URL = "https://diplomatcorner.net:2083";
-const CPANEL_USERNAME = "diplomvv";
-const CPANEL_API_TOKEN = "2JL5W3RUMNY0KOX451GL2PPY4L8RX9RS";
-const PUBLIC_DOMAIN = "https://diplomatcorner.net";
+const CPANEL_API_URL = process.env.NEXT_PUBLIC_CPANEL_API_URL;
+const CPANEL_USERNAME = process.env.NEXT_PUBLIC_CPANEL_USERNAME;
+const CPANEL_API_TOKEN = process.env.NEXT_PUBLIC_CPANEL_API_TOKEN;
+const PUBLIC_DOMAIN = process.env.NEXT_PUBLIC_PUBLIC_DOMAIN;
 
 interface ApiResponse {
   success: boolean;
@@ -16,7 +16,7 @@ interface ApiResponse {
   message?: string;
   carId?: string;
   paymentId?: string;
-  cars?: (typeof Car)[];
+  cars?: ICar[];
   pagination?: {
     total: number;
     page: number;
@@ -39,7 +39,9 @@ async function uploadImage(
   apiFormData.append("dir", `/public_html/${uploadFolder}/`);
   apiFormData.append("file-1", file, randomFileName);
 
-  const authHeader = `cpanel ${CPANEL_USERNAME}:${CPANEL_API_TOKEN.trim()}`;
+  const authHeader = `cpanel ${CPANEL_USERNAME}:${
+    CPANEL_API_TOKEN?.trim() || ""
+  }`;
 
   try {
     const response = await fetch(
@@ -77,52 +79,50 @@ export async function GET(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse>> {
   try {
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const advertisementType = searchParams.get("advertisementType");
+
     await connectToDatabase();
 
-    const searchParams = req.nextUrl.searchParams;
-    const userId = searchParams.get("userId");
-    const status = searchParams.get("status");
-    const visibility = searchParams.get("visibility");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    // Build the query
+    const query: { status: string; advertisementType?: string } = {
+      status: "Active",
+    };
+    if (advertisementType) {
+      query.advertisementType = advertisementType;
+    }
+
+    // Calculate skip value for pagination
     const skip = (page - 1) * limit;
 
-    const query: Record<string, string> = {};
-    if (userId) query.userId = userId;
-    if (status) query.status = status;
-    if (visibility) query.visibility = visibility;
-
-    console.log("Car API Query:", query);
-
     // Get total count for pagination
-    const totalCount = await Car.countDocuments(query);
+    const total = await Car.countDocuments(query);
 
-    // Get paginated results
+    // Fetch cars with pagination and filters
     const cars = await Car.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    console.log(`Found ${cars.length} cars in the database (page ${page})`);
+    // Calculate pagination info
+    const hasMore = skip + cars.length < total;
 
     return NextResponse.json({
       success: true,
-      cars,
+      cars: cars.map((car) => car.toObject()),
       pagination: {
-        total: totalCount,
         page,
         limit,
-        hasMore: skip + cars.length < totalCount,
+        total,
+        hasMore,
       },
     });
   } catch (error) {
-    console.error("Error fetching cars:", error);
+    console.error("Error in cars API:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
-      },
+      { success: false, error: "Internal Server Error" },
       { status: 500 }
     );
   }

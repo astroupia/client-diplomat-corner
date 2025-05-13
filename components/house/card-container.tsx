@@ -32,7 +32,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
   const [sortOrder, setSortOrder] = useState<string>("Default");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [fullHouses, setFullHouses] = useState<IHouse[]>([]);
@@ -48,26 +48,30 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     { value: "Size Large to Small", label: "Size: Large to Small" },
   ];
 
-  // Filter options for properties
+  // Filter options for houses
   const filterOptions = [
-    // Advertisement type filters
-    { value: "For Rent", label: "For Rent" },
-    { value: "For Sale", label: "For Sale" },
-    // House type filters
-    { value: "House", label: "House" },
+    // Only show advertisement type filters if no specific type is provided
+    ...(advertisementType
+      ? []
+      : [
+          { value: "For Rent", label: "For Rent" },
+          { value: "For Sale", label: "For Sale" },
+        ]),
+    // Property type filters
     { value: "Apartment", label: "Apartment" },
-    { value: "Guest House", label: "Guest House" },
+    { value: "House", label: "House" },
+    { value: "Villa", label: "Villa" },
+    { value: "Condo", label: "Condo" },
+    { value: "Townhouse", label: "Townhouse" },
     // Bedroom filters
-    { value: "1-bedroom", label: "1 Bedroom" },
-    { value: "2-bedroom", label: "2 Bedrooms" },
-    { value: "3-bedroom", label: "3+ Bedrooms" },
-    // Features filters
-    { value: "parking", label: "Parking" },
-    { value: "WiFi", label: "WiFi" },
-    { value: "Furnished", label: "Furnished" },
-    { value: "Gym", label: "Gym" },
-    { value: "Outdoor", label: "Outdoor" },
-    { value: "Dining Area", label: "Dining Area" },
+    { value: "1", label: "1 Bedroom" },
+    { value: "2", label: "2 Bedrooms" },
+    { value: "3", label: "3 Bedrooms" },
+    { value: "4+", label: "4+ Bedrooms" },
+    // Bathroom filters
+    { value: "1", label: "1 Bathroom" },
+    { value: "2", label: "2 Bathrooms" },
+    { value: "3+", label: "3+ Bathrooms" },
   ];
 
   const allFilterOptions = [...filterOptions];
@@ -93,8 +97,19 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
         const data = await response.json();
         if (data.success && Array.isArray(data.houses)) {
+          const validatedHouses = data.houses.map((house: IHouse) => ({
+            ...house,
+            price: Number(house.price) || 0,
+            bedroom: Number(house.bedroom) || 0,
+            bathroom: Number(house.bathroom) || 0,
+            size: Number(house.size) || 0,
+            houseType: house.houseType || "House",
+            currency: house.currency || "ETB",
+            advertisementType: house.advertisementType || "Sale",
+          }));
+
           // Filter out pending houses - only show active listings
-          const activeHouses = data.houses.filter(
+          const activeHouses = validatedHouses.filter(
             (house: IHouse) => house.status === "Active"
           );
 
@@ -108,13 +123,17 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
           if (currentPage === 1) {
             setHouses(activeHouses);
+            setFullHouses(activeHouses);
           } else {
             setHouses((prevHouses) => [...prevHouses, ...activeHouses]);
+            setFullHouses((prevHouses) => [...prevHouses, ...activeHouses]);
           }
 
           setHasMore(data.pagination?.hasMore || false);
         } else {
-          throw new Error("Invalid data format: Expected houses data");
+          throw new Error(
+            data.error || "Invalid data format: Expected an array of houses"
+          );
         }
       } catch (error) {
         console.error("Error fetching houses:", error);
@@ -380,11 +399,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
         {/* Listing Banner */}
         {userId && userHouses.length > 0 && (
           <div className="mb-8">
-            <ListingBanner
-              type="house"
-              title="Your Listed Properties"
-              subtitle="Manage and view your listed properties"
-            />
+            <h1 className="text-2xl font-bold">Your Listed Properties</h1>
           </div>
         )}
 

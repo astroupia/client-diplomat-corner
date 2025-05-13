@@ -33,7 +33,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
   const [fullCars, setFullCars] = useState<ICar[]>([]);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
@@ -121,8 +121,10 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
           if (currentPage === 1) {
             setCars(activeCars);
+            setFullCars(activeCars);
           } else {
             setCars((prevCars) => [...prevCars, ...activeCars]);
+            setFullCars((prevCars) => [...prevCars, ...activeCars]);
           }
 
           setHasMore(data.pagination?.hasMore || false);
@@ -389,11 +391,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
         {/* Listing Banner */}
         {userId && userCars.length > 0 && (
           <div className="mb-8">
-            <ListingBanner
-              type="car"
-              title="Your Listed Cars"
-              subtitle="Manage and view your listed cars"
-            />
+            <h1 className="text-2xl font-bold">Your Listed Properties</h1>
           </div>
         )}
 

@@ -1,13 +1,13 @@
 // app/api/houses/route.ts
 import { NextRequest, NextResponse } from "next/server";
-
-import House from "@/lib/models/house.model";
+import { Document } from "mongoose";
+import House, { IHouse } from "@/lib/models/house.model";
 import { connectToDatabase } from "@/lib/db-connect";
 
 interface ApiResponse {
   success: boolean;
   error?: string;
-  houses?: (typeof House)[];
+  houses?: IHouse[];
   pagination?: {
     total: number;
     page: number;
@@ -27,13 +27,15 @@ export async function GET(
     const status = searchParams.get("status");
     const visibility = searchParams.get("visibility");
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const advertisementType = searchParams.get("advertisementType");
     const skip = (page - 1) * limit;
 
-    const query: Record<string, string> = {};
+    const query: Record<string, string> = { status: "Active" };
     if (userId) query.userId = userId;
     if (status) query.status = status;
     if (visibility) query.visibility = visibility;
+    if (advertisementType) query.advertisementType = advertisementType;
 
     console.log("House API Query:", query);
 
@@ -44,19 +46,47 @@ export async function GET(
     const houses = await House.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit)
-      .lean(); // Use .lean() for plain JS objects
+      .limit(limit);
 
     console.log(`Found ${houses.length} houses in the database (page ${page})`);
 
+    const hasMore = skip + houses.length < totalCount;
+
+    // Convert Mongoose documents to plain objects and ensure they match IHouse interface
+    const formattedHouses = houses.map((house) => ({
+      _id: house._id.toString(),
+      name: house.name,
+      userId: house.userId,
+      description: house.description,
+      advertisementType: house.advertisementType,
+      price: house.price,
+      paymentMethod: house.paymentMethod,
+      bedroom: house.bedroom,
+      parkingSpace: house.parkingSpace,
+      bathroom: house.bathroom,
+      size: house.size,
+      houseType: house.houseType,
+      condition: house.condition || "",
+      maintenance: house.maintenance || "",
+      essentials: house.essentials || [],
+      currency: house.currency || "",
+      imageUrl: house.imageUrl,
+      imageUrls: house.imageUrls || [],
+      paymentId: house.paymentId,
+      visiblity: house.visiblity,
+      status: house.status,
+      createdAt: house.createdAt,
+      updatedAt: house.updatedAt,
+    }));
+
     return NextResponse.json({
       success: true,
-      houses,
+      houses: formattedHouses,
       pagination: {
-        total: totalCount,
         page,
         limit,
-        hasMore: skip + houses.length < totalCount,
+        total: totalCount,
+        hasMore,
       },
     });
   } catch (error) {
