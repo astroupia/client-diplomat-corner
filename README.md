@@ -1,36 +1,164 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Diplomat Corner
+
+Diplomat Corner is a specialized marketplace platform designed exclusively for diplomats in Ethiopia. The platform facilitates hassle-free transactions for duty-free goods, housing, and more, connecting diplomatic community members in a secure and efficient environment.
+
+## Features
+
+- **Car Listings**
+
+  - Browse cars for rent and sale
+  - Detailed car specifications and images
+  - Advanced filtering and sorting options
+  - Real-time availability updates
+
+- **House Listings**
+
+  - View houses and apartments for rent
+  - Property details with amenities
+  - Location-based search
+  - Virtual tours and image galleries
+
+- **User Features**
+
+  - Secure authentication with Clerk
+  - User profiles and preferences
+  - Favorite listings
+  - Notification system
+  - Review and rating system
+
+- **Admin Features**
+  - Listing management
+  - User management
+  - Content moderation
+  - Analytics dashboard
+
+## Tech Stack
+
+- **Frontend**
+
+  - Next.js 14 (App Router)
+  - TypeScript
+  - Tailwind CSS
+  - Framer Motion
+  - Clerk Authentication
+  - Shadcn UI Components
+
+- **Backend**
+  - Next.js API Routes
+  - MongoDB
+  - WebSocket for real-time features
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- Node.js (v18 or higher)
+- npm or yarn
+- MongoDB (local or Atlas)
+- Clerk account for authentication
+
+## Environment Variables
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```env
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
+
+# MongoDB
+MONGODB_URI=your_mongodb_connection_string
+
+# Other Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository:
+
+```bash
+git clone https://github.com/your-username/diplomat-corner.git
+cd diplomat-corner
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Set up environment variables:
+
+- Copy `.env.example` to `.env.local`
+- Fill in the required environment variables
+
+4. Run the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+diplomat-corner/
+├── app/                    # Next.js app directory
+│   ├── (auth)/            # Authentication routes
+│   ├── (root)/            # Main application routes
+│   └── api/               # API routes
+├── components/            # React components
+│   ├── car/              # Car-related components
+│   ├── house/            # House-related components
+│   ├── ui/               # UI components
+│   └── ...
+├── lib/                   # Utility functions and configurations
+├── public/               # Static assets
+└── styles/              # Global styles
+```
 
-## Learn More
+## Available Scripts
 
-To learn more about Next.js, take a look at the following resources:
+- `npm run dev` - Start development server
+- `npm run build` - Build production application
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The application can be deployed on Vercel:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push your code to GitHub
+2. Import your repository on Vercel
+3. Configure environment variables
+4. Deploy
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support, email support@diplomatcorner.com or join our Slack channel.
+
+## Acknowledgments
+
+- Next.js team for the amazing framework
+- Clerk for authentication services
+- MongoDB for database services
+- All contributors who have helped shape this project

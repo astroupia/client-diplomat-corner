@@ -28,12 +28,15 @@ export async function GET(
     const visibility = searchParams.get("visibility");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const advertisementType = searchParams.get("advertisementType");
     const skip = (page - 1) * limit;
 
-    const query: Record<string, string> = {};
+    const query: Record<string, string> = { status: "Active" };
     if (userId) query.userId = userId;
     if (status) query.status = status;
     if (visibility) query.visibility = visibility;
+    if (advertisementType) query.advertisementType = advertisementType;
 
     console.log("House API Query:", query);
 
@@ -49,14 +52,17 @@ export async function GET(
 
     console.log(`Found ${houses.length} houses in the database (page ${page})`);
 
+    const hasMore = skip + houses.length < totalCount;
+    const totalPages = Math.ceil(totalCount / limit);
+
     return NextResponse.json({
       success: true,
       houses,
       pagination: {
+        currentPage: page,
+        totalPages,
         total: totalCount,
-        page,
-        limit,
-        hasMore: skip + houses.length < totalCount,
+        hasMore,
       },
     });
   } catch (error) {
