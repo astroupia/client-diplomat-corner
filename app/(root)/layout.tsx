@@ -20,11 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={inter.className}>
-      <body className="min-h-screen flex flex-col">
+      <body className={`min-h-screen flex flex-col ${inter.className}`}>
         <NavBar />
-        <Suspense fallback={<Loading />}>
-          <main className="flex-1 pt-20">{children}</main>
-        </Suspense>
+        <main className="flex-1 pt-20">{children}</main>
         <Footer />
       </body>
     </html>
