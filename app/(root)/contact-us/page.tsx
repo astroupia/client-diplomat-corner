@@ -124,7 +124,7 @@ export default function Page() {
               </h2>
               <div className="aspect-video w-full rounded-lg overflow-hidden">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.6855771046493!2d38.75526097596509!3d8.980599889188402!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b85cef5ab402d%3A0x8467b6b037a24d49!2sBole%2C%20Addis%20Ababa!5e0!3m2!1sen!2set!4v1687456789012!5m2!1sen!2set"
+                  src="https://maps.app.goo.gl/u52F3HWeRYbiCq378"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}

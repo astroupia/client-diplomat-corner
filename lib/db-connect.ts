@@ -13,13 +13,18 @@ const cached: MongooseCache = (
 ).mongoose || { conn: null, promise: null };
 
 export const connectToDatabase = async () => {
-  if (cached.conn) return cached.conn;
+  if (cached.conn) {
+    console.log("Using cached database connection");
+    return cached.conn;
+  }
 
   if (!MONGODB_URI) {
     console.error("MONGODB_URI is missing from environment variables");
-    return;
+    throw new Error("MONGODB_URI is missing from environment variables");
   }
+
   try {
+    console.log("Connecting to MongoDB...");
     cached.promise =
       cached.promise ||
       mongoose
@@ -27,14 +32,17 @@ export const connectToDatabase = async () => {
           dbName: DB_NAME,
         })
         .then((m) => {
+          console.log(
+            `Connected to MongoDB database '${DB_NAME}' successfully`
+          );
           return m.connection;
         });
 
     cached.conn = await cached.promise;
-    console.log(`Connected to MongoDB database '${DB_NAME}' successfully`);
     return cached.conn;
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
+    cached.promise = null;
     throw error;
   }
 };

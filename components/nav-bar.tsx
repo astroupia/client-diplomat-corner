@@ -244,27 +244,6 @@ const NavBar: React.FC = () => {
   // Define navigation items with conditional visibility
   const navItems: NavItem[] = [
     {
-      label: "All Properties",
-      href: "#",
-      name: "",
-      type: "car",
-      children: [
-        {
-          label: "Cars",
-          href: "/car",
-          name: "",
-          type: "car",
-        },
-
-        {
-          label: "Houses",
-          href: "/house",
-          name: "",
-          type: "house",
-        },
-      ],
-    },
-    {
       label: "House For Rent",
       href: "/house-for-rent",
       name: "",
@@ -273,6 +252,12 @@ const NavBar: React.FC = () => {
     {
       label: "Car For Sale",
       href: "/car-for-sale",
+      name: "",
+      type: "car",
+    },
+    {
+      label: "Car For Rent",
+      href: "/car-for-rent",
       name: "",
       type: "car",
     },
