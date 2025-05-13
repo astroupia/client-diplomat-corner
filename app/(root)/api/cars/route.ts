@@ -1,14 +1,14 @@
 import { connectToDatabase } from "@/lib/db-connect";
-import Car from "@/lib/models/car.model";
+import Car, { ICar } from "@/lib/models/car.model";
 import { NextRequest, NextResponse } from "next/server";
 import Payment from "@/lib/models/payment.model";
 import { auth } from "@clerk/nextjs/server";
 import { v4 as uuidv4 } from "uuid";
 
-const CPANEL_API_URL = "https://diplomatcorner.net:2083";
-const CPANEL_USERNAME = "diplomvv";
-const CPANEL_API_TOKEN = "2JL5W3RUMNY0KOX451GL2PPY4L8RX9RS";
-const PUBLIC_DOMAIN = "https://diplomatcorner.net";
+const CPANEL_API_URL = process.env.NEXT_PUBLIC_CPANEL_API_URL;
+const CPANEL_USERNAME = process.env.NEXT_PUBLIC_CPANEL_USERNAME;
+const CPANEL_API_TOKEN = process.env.NEXT_PUBLIC_CPANEL_API_TOKEN;
+const PUBLIC_DOMAIN = process.env.NEXT_PUBLIC_PUBLIC_DOMAIN;
 
 interface ApiResponse {
   success: boolean;
@@ -16,7 +16,7 @@ interface ApiResponse {
   message?: string;
   carId?: string;
   paymentId?: string;
-  cars?: (typeof Car)[];
+  cars?: ICar[];
   pagination?: {
     total: number;
     page: number;
@@ -39,7 +39,9 @@ async function uploadImage(
   apiFormData.append("dir", `/public_html/${uploadFolder}/`);
   apiFormData.append("file-1", file, randomFileName);
 
-  const authHeader = `cpanel ${CPANEL_USERNAME}:${CPANEL_API_TOKEN.trim()}`;
+  const authHeader = `cpanel ${CPANEL_USERNAME}:${
+    CPANEL_API_TOKEN?.trim() || ""
+  }`;
 
   try {
     const response = await fetch(
@@ -79,13 +81,15 @@ export async function GET(
   try {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limit = parseInt(searchParams.get("limit") || "20");
     const advertisementType = searchParams.get("advertisementType");
 
     await connectToDatabase();
 
     // Build the query
-    const query: any = { status: "Active" };
+    const query: { status: string; advertisementType?: string } = {
+      status: "Active",
+    };
     if (advertisementType) {
       query.advertisementType = advertisementType;
     }
@@ -100,19 +104,17 @@ export async function GET(
     const cars = await Car.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit)
-      .lean();
+      .limit(limit);
 
     // Calculate pagination info
     const hasMore = skip + cars.length < total;
-    const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json({
       success: true,
-      cars,
+      cars: cars.map((car) => car.toObject()),
       pagination: {
-        currentPage: page,
-        totalPages,
+        page,
+        limit,
         total,
         hasMore,
       },
