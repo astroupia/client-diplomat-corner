@@ -121,8 +121,10 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
           if (currentPage === 1) {
             setCars(activeCars);
+            setFullCars(activeCars);
           } else {
             setCars((prevCars) => [...prevCars, ...activeCars]);
+            setFullCars((prevCars) => [...prevCars, ...activeCars]);
           }
 
           setHasMore(data.pagination?.hasMore || false);
