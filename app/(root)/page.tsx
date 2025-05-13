@@ -80,8 +80,8 @@ const HeroSection = () => {
               <Image
                 width={800}
                 height={420}
-                src={images.air.src || "/placeholder.svg"}
-                alt={images.air.alt}
+                src={images.dashen.src || "/placeholder.svg"}
+                alt={images.dashen.alt}
                 className="w-full h-[320px] sm:h-[420px] object-cover transition-transform duration-500 group-hover:scale-105"
                 priority
               />
@@ -91,14 +91,14 @@ const HeroSection = () => {
                   Featured Ad
                 </span>
                 <h3 className="text-white text-xl sm:text-2xl font-bold mt-2 mb-2 sm:mb-3">
-                  Ethiopian Airlines
+                  Dashen SuperApp
                 </h3>
                 <p className="text-white/90 text-xs sm:text-sm mb-3 sm:mb-4 max-w-md">
-                  Discover the world with Ethiopian Airlines. Special offers on
-                  international flights.
+                  Discover Ethiopian Best SuperApp. Special offers for early
+                  subscribers.
                 </p>
                 <Link
-                  href="https://www.ethiopianairlines.com/"
+                  href="https://www.dashensuperapp.com/"
                   target="_blank"
                   className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm text-primary px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-md hover:bg-white transition-colors duration-300 text-sm"
                 >
@@ -116,18 +116,18 @@ const HeroSection = () => {
                 <Image
                   width={400}
                   height={200}
-                  src={images.awash.src || "/placeholder.svg"}
-                  alt={images.awash.alt}
+                  src={images.ad.src || "/placeholder.svg"}
+                  alt={images.ad.alt}
                   className="w-full h-[150px] sm:h-[200px] object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-3 sm:p-4 w-full">
                   <Link
-                    href="https://awashbank.com/"
+                    href="/contact-us"
                     target="_blank"
                     className="inline-flex items-center gap-1 bg-white/90 backdrop-blur-sm text-primary px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm shadow-md hover:bg-white transition-colors duration-300"
                   >
-                    #Awash_Bank
+                    Contact Us
                   </Link>
                 </div>
               </div>
@@ -136,18 +136,18 @@ const HeroSection = () => {
                 <Image
                   width={400}
                   height={200}
-                  src={images.dashen.src || "/placeholder.svg"}
-                  alt={images.dashen.alt}
+                  src={images.ad.src || "/placeholder.svg"}
+                  alt={images.ad.alt}
                   className="w-full h-[150px] sm:h-[200px] object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-3 sm:p-4 w-full">
                   <Link
-                    href="https://www.dashensuperapp.com/"
+                    href="/contact-us"
                     target="_blank"
                     className="inline-flex items-center gap-1 bg-white/90 backdrop-blur-sm text-primary px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm shadow-md hover:bg-white transition-colors duration-300"
                   >
-                    #Dashen_SuperApp
+                    Contact Us
                   </Link>
                 </div>
               </div>
@@ -814,7 +814,7 @@ export default function Home() {
           }
           const data = await response.json();
           const user = data.users?.[0];
-          
+
           // Show popup if user exists but doesn't have a phone number
           if (user && (!user.phoneNumber || user.phoneNumber === "")) {
             setShowPhonePopup(true);
@@ -845,9 +845,9 @@ export default function Home() {
         <WhyChooseUs />
         <ServicesSection />
       </div>
-      <PhoneNumberPopup 
-        isOpen={showPhonePopup} 
-        onClose={() => setShowPhonePopup(false)} 
+      <PhoneNumberPopup
+        isOpen={showPhonePopup}
+        onClose={() => setShowPhonePopup(false)}
       />
     </div>
   );

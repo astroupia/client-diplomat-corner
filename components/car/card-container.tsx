@@ -49,9 +49,13 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
   // Filter options for cars
   const filterOptions = [
-    // Advertisement type filters
-    { value: "For Rent", label: "For Rent" },
-    { value: "For Sale", label: "For Sale" },
+    // Only show advertisement type filters if no specific type is provided
+    ...(advertisementType
+      ? []
+      : [
+          { value: "For Rent", label: "For Rent" },
+          { value: "For Sale", label: "For Sale" },
+        ]),
     // Body type filters
     { value: "Sedan", label: "Sedan" },
     { value: "SUV", label: "SUV" },
@@ -262,7 +266,10 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
       {/* Filter and Sort Section */}
       <div className="bg-white/80 backdrop-blur-md border-b border-gray-200 relative z-30">
         <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-4 px-2 py-4">
-          <ListingBanner type="car" title="Cars" />
+          <ListingBanner
+            type="car"
+            title={advertisementType === "Rent" ? "Cars for Rent" : "Cars"}
+          />
           <div className="py-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-2">
               <button

@@ -6,6 +6,10 @@ export interface ImageAsset {
 
 // Export images as objects with proper typing
 export const images = {
+  ad: {
+    src: "/assets/images/ad.png",
+    alt: "ad",
+  },
   air: {
     src: "/assets/images/air.jpg",
     alt: "Air view",

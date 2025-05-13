@@ -10,6 +10,7 @@ const isPublicRoute = createRouteMatcher([
   "/house",
   "/car-for-sale",
   "/house-for-rent",
+  "/car-for-rent",
   "/about-us",
   "/contact-us",
   "/api/cars(.*)",
