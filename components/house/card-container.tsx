@@ -32,7 +32,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
   const [sortOrder, setSortOrder] = useState<string>("Default");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [fullHouses, setFullHouses] = useState<IHouse[]>([]);
