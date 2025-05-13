@@ -380,11 +380,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
         {/* Listing Banner */}
         {userId && userHouses.length > 0 && (
           <div className="mb-8">
-            <ListingBanner
-              type="house"
-              title="Your Listed Properties"
-              subtitle="Manage and view your listed properties"
-            />
+            <h1 className="text-2xl font-bold">Your Listed Properties</h1>
           </div>
         )}
 
