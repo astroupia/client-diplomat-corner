@@ -577,7 +577,7 @@ const NavBar: React.FC = () => {
                         onClick={handleMobileMenuClose}
                         className="relative overflow-hidden px-3 xl:px-4 py-2 rounded-lg bg-white/15 border border-white/20 text-white hover:bg-white/25 hover:border-white/40 transition-all duration-300 group"
                       >
-                        <span className="relative z-10">Manage Listings</span>
+                        <span className="relative z-10">List Here</span>
                       </Link>
                     </>
                   )}
@@ -756,7 +756,7 @@ const NavBar: React.FC = () => {
                           onClick={handleMobileMenuClose}
                           className="w-full text-center relative overflow-hidden px-4 hover:border-primary py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:text-primary transition-all duration-300 group"
                         >
-                          <span className="relative z-10">Manage Listings</span>
+                          <span className="relative z-10">List Here</span>
                           <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                         </Link>
                       </>
