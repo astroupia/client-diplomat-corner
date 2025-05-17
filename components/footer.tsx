@@ -47,8 +47,9 @@ const footerSections: FooterSection[] = [
   {
     title: "Services",
     links: [
-      { label: "Shop Car", href: "/car" },
-      { label: "Shop House", href: "/house" },
+      { label: "Buy Car", href: "/car-for-sale" },
+      { label: "Rent House", href: "/house-for-rent" },
+      { label: "Rent Car", href: "/car-for-rent" },
       { label: "Grocery", href: "http://www.kedamegebeya.com/?v=ae41a6d38b78" },
       {
         label: "Items For Sale",

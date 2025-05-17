@@ -391,7 +391,7 @@ const ManageCar: React.FC<ManageCarProps> = ({
             engine: "",
             maintenance: "",
             price: 0,
-            servicePrice: 0,
+            servicePrice: 3000,
             description: "",
             advertisementType: "Sale",
             paymentMethod: "Daily",
@@ -900,7 +900,7 @@ const ManageCar: React.FC<ManageCarProps> = ({
                         Service Price
                       </label>
                       <span className="px-3 py-1 bg-primary/20 text-primary rounded-md font-medium">
-                        150 ETB
+                        3,000 ETB
                       </span>
                     </div>
                     <input

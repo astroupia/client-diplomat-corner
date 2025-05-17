@@ -370,7 +370,7 @@ const NavBar: React.FC = () => {
       )}
 
       <nav
-        className={`bg-gradient-to-r from-[#5B8F2D]/95 to-[#5B8F2D]/90 backdrop-filter backdrop-blur-sm border-b border-[#4a7825]/40 px-4 sm:px-6 py-3 fixed top-0 left-0 right-0 z-50 shadow-sm m-0 transition-all duration-700 ease-out ${
+        className={`bg-gradient-to-r from-[#5B8F2D]/95 to-[#5B8F2D]/90 backdrop-filter backdrop-blur-sm border-b border-[#4a7825]/40 px-4 sm:px-6 py-3 w-full z-50 shadow-sm m-0 transition-all duration-700 ease-out ${
           isVisible
             ? "opacity-100 translate-y-0"
             : "opacity-0 -translate-y-full pointer-events-none"
@@ -577,7 +577,7 @@ const NavBar: React.FC = () => {
                         onClick={handleMobileMenuClose}
                         className="relative overflow-hidden px-3 xl:px-4 py-2 rounded-lg bg-white/15 border border-white/20 text-white hover:bg-white/25 hover:border-white/40 transition-all duration-300 group"
                       >
-                        <span className="relative z-10">Manage Products</span>
+                        <span className="relative z-10">Manage Listings</span>
                       </Link>
                     </>
                   )}
@@ -756,7 +756,7 @@ const NavBar: React.FC = () => {
                           onClick={handleMobileMenuClose}
                           className="w-full text-center relative overflow-hidden px-4 hover:border-primary py-2 rounded-lg bg-white border border-gray-200 text-gray-700 hover:text-primary transition-all duration-300 group"
                         >
-                          <span className="relative z-10">Manage Products</span>
+                          <span className="relative z-10">Manage Listings</span>
                           <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                         </Link>
                       </>

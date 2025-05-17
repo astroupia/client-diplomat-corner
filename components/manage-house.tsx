@@ -361,7 +361,7 @@ const ManageHouse: React.FC<ManageHouseProps> = ({
             condition: "",
             maintenance: "",
             price: 0,
-            servicePrice: undefined,
+            servicePrice: 3000,
             description: "",
             advertisementType: "Rent",
             paymentMethod: "Monthly",
@@ -842,7 +842,7 @@ const ManageHouse: React.FC<ManageHouseProps> = ({
                         Service Price
                       </label>
                       <span className="px-3 py-1 bg-primary/20 text-primary rounded-md font-medium">
-                        150 ETB
+                        3,000 ETB
                       </span>
                     </div>
                     <input
