@@ -14,9 +14,12 @@ import {
   Circle,
   Send,
   Loader2,
+  Facebook,
 } from "lucide-react";
+import Link from "next/link";
 import { MessageSubject } from "@/lib/models/message.model";
 import { useAuth } from "@clerk/nextjs";
+import { RiTelegram2Line } from "react-icons/ri";
 
 const ContactForm: React.FC = () => {
   const { userId } = useAuth();
@@ -226,7 +229,7 @@ const ContactForm: React.FC = () => {
                     isMobile ? "text-gray-700" : "text-white"
                   }`}
                 >
-                  +251 910 111 213
+                  +251 911 10 8874
                 </span>
               </li>
               <li className="flex items-center">
@@ -258,7 +261,7 @@ const ContactForm: React.FC = () => {
                     isMobile ? "text-gray-700" : "text-white"
                   }`}
                 >
-                  Addis Ababa, Dembel Kebede Building
+                  Addis Ababa, Jemo, Express Plaza
                 </span>
               </li>
             </ul>
@@ -268,36 +271,28 @@ const ContactForm: React.FC = () => {
                 isMobile ? "mt-6 flex" : "absolute bottom-6 left-6 flex"
               } space-x-3`}
             >
-              <a
-                href="#"
+              <Link
+                href="https://web.facebook.com/groups/136633776901724"
+                target="_blank"
                 className={`rounded-full ${
                   isMobile
                     ? "bg-primary/10 text-primary hover:bg-primary/20"
                     : "bg-white/10 hover:bg-white/20"
                 } p-2 transition-colors`}
               >
-                <Twitter className="h-4 w-4" />
-              </a>
-              <a
-                href="#"
+                <Facebook className="h-4 w-4" />
+              </Link>
+              <Link
+                href="t.me/DiplomatCorner"
+                target="_blank"
                 className={`rounded-full ${
                   isMobile
                     ? "bg-primary/10 text-primary hover:bg-primary/20"
                     : "bg-white/10 hover:bg-white/20"
                 } p-2 transition-colors`}
               >
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a
-                href="#"
-                className={`rounded-full ${
-                  isMobile
-                    ? "bg-primary/10 text-primary hover:bg-primary/20"
-                    : "bg-white/10 hover:bg-white/20"
-                } p-2 transition-colors`}
-              >
-                <Github className="h-4 w-4" />
-              </a>
+                <RiTelegram2Line className="h-4 w-4" />
+              </Link>
             </div>
           </motion.div>
 

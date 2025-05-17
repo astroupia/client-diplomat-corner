@@ -3,7 +3,14 @@
 import type React from "react";
 import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { Mail, MapPin, MessageSquare, Phone, Send } from "lucide-react";
+import {
+  Mail,
+  MapPin,
+  MessageSquare,
+  Facebook,
+  Phone,
+  Send,
+} from "lucide-react";
 import Link from "next/link";
 import {
   GoogleMap,
@@ -124,7 +131,7 @@ export default function Page() {
               </h2>
               <div className="aspect-video w-full rounded-lg overflow-hidden">
                 <iframe
-                  src="https://maps.app.goo.gl/u52F3HWeRYbiCq378"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.5205100587356!2d38.7558!3d9.0092!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zOcKwMDAnMzMuMSJOIDM4wrA0NScyMC45IkU!5e0!3m2!1sen!2set!4v1635000000000!5m2!1sen!2set"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -135,15 +142,15 @@ export default function Page() {
                   title="Diplomat Corner Location"
                 ></iframe>
                 <div className="mt-4 text-center">
-                  <a
-                    href="https://maps.app.goo.gl/tU4L6AgP9An5b2mA8"
+                  <Link
+                    href="https://www.google.com/maps/place/Express+Plaza/@9.0092,38.7558,17z"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                   >
                     <MapPin className="h-4 w-4" />
                     <span>Open in Google Maps</span>
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

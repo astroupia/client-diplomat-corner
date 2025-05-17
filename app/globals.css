@@ -86,3 +86,16 @@ body.sidebar-expanded .main-content {
   margin-left: 16rem;
   width: calc(100% - 16rem);
 }
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite linear;
+}
