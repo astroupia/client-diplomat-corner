@@ -118,8 +118,8 @@ export default function Page() {
       title: "Contact Us",
       content: `
         <p>If you have questions or comments about this Privacy Policy, please contact us at:</p>
-        <p class="mt-2">Diplomat Corner<br>123 Business Avenue<br>Addis Ababa, Ethiopia</p>
-        <p class="mt-2">Email: privacy@diplomatcorner.com<br>Phone: +251 123 456 789</p>
+        <p class="mt-2">Diplomat Corner<br>Addis Ababa, Ethiopia</p>
+        <p class="mt-2">Email: contact@diplomatcorner.com<br>Phone: +251 911 10 8874</p>
       `,
     },
   ];
