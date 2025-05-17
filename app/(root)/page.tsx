@@ -201,7 +201,7 @@ const HeroSection = () => {
                     <div className="text-center">
                       <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 mx-auto" />
                       <span className="text-[10px] sm:text-xs font-medium mt-1">
-                        Shop Now
+                        Browse Listings
                       </span>
                     </div>
                   </Link>
@@ -371,10 +371,10 @@ const FeaturedProducts = () => {
         <div className="mb-6 sm:mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-              Featured Products
+              Featured Properties
             </h2>
             <p className="text-gray-600 mt-1 text-sm sm:text-base">
-              Discover our most popular items
+              Discover our most popular listings
             </p>
           </div>
 
@@ -765,9 +765,9 @@ const WhyChooseUs = () => {
           <div className="w-16 h-1 bg-primary rounded-full mx-auto mb-4 sm:mb-6"></div>
           <p className="text-gray-700 text-sm sm:text-base">
             Diplomat Corner is the premier marketplace designed exclusively for
-            diplomats in Ethiopia. We connect diplomatic community members to
-            facilitate hassle-free transactions for duty-free goods, housing,
-            and more.
+            diplomats and expats in Ethiopia. We connect diplomatic community
+            members to facilitate hassle-free transactions for duty-free cars,
+            items for sale, housing and many mores.
           </p>
         </div>
 
@@ -797,6 +797,16 @@ const WhyChooseUs = () => {
     </section>
   );
 };
+
+// Announcement Banner Component
+export function AnnouncementBanner() {
+  return (
+    <div className="bg-gradient-to-r from-white/90 to-secondary text-primary py-2 text-center italic font-medium relative overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] animate-shimmer"></div>
+      <div className="relative z-10">The #1 Diplomatic Portal in Ethiopia!</div>
+    </div>
+  );
+}
 
 // Home Component
 export default function Home() {
