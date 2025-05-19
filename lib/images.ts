@@ -58,6 +58,14 @@ export const images = {
     src: "/assets/images/awash.jpg",
     alt: "awash",
   },
+  new_house: {
+    src: "/assets/images/new_building.jpg",
+    alt: "new house",
+  },
+  new_car: {
+    src: "/assets/images/new_car.jpg",
+    alt: "new house 2",
+  },
 };
 
 // Export a function to safely get an image
