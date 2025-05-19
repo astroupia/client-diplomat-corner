@@ -166,8 +166,8 @@ const HeroSection = () => {
                 <Image
                   width={600}
                   height={650}
-                  src={images.car.src || "/placeholder.svg"}
-                  alt={images.car.alt}
+                  src={images.new_car.src || "/placeholder.svg"}
+                  alt={images.new_car.alt}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
@@ -179,7 +179,7 @@ const HeroSection = () => {
                 <Image
                   width={600}
                   height={650}
-                  src={images.building.src || "/placeholder.svg"}
+                  src={images.new_house.src || "/placeholder.svg"}
                   alt="Luxury House"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
@@ -643,7 +643,7 @@ const ServicesSection = () => {
               <Image
                 width={600}
                 height={500}
-                src={images.car.src || "/placeholder.svg"}
+                src={images.new_car.src || "/placeholder.svg"}
                 alt="City View"
                 className="w-full h-[250px] sm:h-[300px] lg:h-full object-cover transition-transform duration-700 hover:scale-105"
               />
