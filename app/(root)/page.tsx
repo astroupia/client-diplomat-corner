@@ -201,7 +201,7 @@ const HeroSection = () => {
                     <div className="text-center">
                       <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 mx-auto" />
                       <span className="text-[10px] sm:text-xs font-medium mt-1">
-                        Browse Listings
+                        Browse
                       </span>
                     </div>
                   </Link>
