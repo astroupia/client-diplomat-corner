@@ -20,6 +20,7 @@ import Link from "next/link";
 import { MessageSubject } from "@/lib/models/message.model";
 import { useAuth } from "@clerk/nextjs";
 import { RiTelegram2Line } from "react-icons/ri";
+import { FaWhatsapp } from "react-icons/fa6";
 
 const ContactForm: React.FC = () => {
   const { userId } = useAuth();
@@ -292,6 +293,17 @@ const ContactForm: React.FC = () => {
                 } p-2 transition-colors`}
               >
                 <RiTelegram2Line className="h-4 w-4" />
+              </Link>
+              <Link
+                href="tel:+251945331111"
+                target="_blank"
+                className={`rounded-full ${
+                  isMobile
+                    ? "bg-primary/10 text-primary hover:bg-primary/20"
+                    : "bg-white/10 hover:bg-white/20"
+                } p-2 transition-colors`}
+              >
+                <FaWhatsapp className="h-4 w-4" />
               </Link>
             </div>
           </motion.div>
