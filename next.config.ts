@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
       "images.clerk.dev",
       "img.clerk.com",
       "uploadthing.com",
+      "media-api.media-api.diplomatcorner.net",
+      "media-api.diplomatcorner.net",
       "utfs.io",
       "files.stripe.com",
     ],

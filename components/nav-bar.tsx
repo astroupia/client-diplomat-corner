@@ -676,7 +676,11 @@ const NavBar: React.FC = () => {
               ))}
 
             {/* Search Component for Mobile */}
-            <div className="relative mt-4" ref={searchRef}>
+            <div
+              className="relative mt-4"
+              ref={searchRef}
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="relative">
                 <input
                   type="text"
@@ -684,6 +688,7 @@ const NavBar: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={handleInputFocus}
+                  onClick={(e) => e.stopPropagation()}
                   className="w-full border border-gray-300 bg-white rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary pr-8 text-gray-900 placeholder-gray-500"
                 />
                 <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500">
@@ -696,7 +701,10 @@ const NavBar: React.FC = () => {
               </div>
               {/* Search Dropdown */}
               {isDropdownVisible && (
-                <div className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto z-[60]">
+                <div
+                  className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto z-[60]"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   {isSearchLoading && searchResults.length === 0 ? (
                     <div className="p-2 text-center text-gray-500">
                       Loading...
