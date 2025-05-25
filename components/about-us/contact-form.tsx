@@ -284,7 +284,7 @@ const ContactForm: React.FC = () => {
                 <Facebook className="h-4 w-4" />
               </Link>
               <Link
-                href="t.me/DiplomatCorner"
+                href="https://t.me/DiplomatCorner"
                 target="_blank"
                 className={`rounded-full ${
                   isMobile
