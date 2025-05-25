@@ -361,7 +361,7 @@ const FeaturedProducts = () => {
   }, [isHovering, currentIndex, itemsToShow, totalProducts, nextSlide]);
 
   // Format price with currency
-  const formatPrice = (price: number, currency: string = "ETB") => {
+  const formatPrice = (price: number, currency: string) => {
     return `${currency} ${price.toLocaleString()}`;
   };
 
@@ -501,7 +501,7 @@ const FeaturedProducts = () => {
                               </span>
                             </div>
                             <span className="text-primary font-semibold text-sm sm:text-base">
-                              {formatPrice(product.price)}
+                              {formatPrice(product.price, product.currency)}
                             </span>
                           </div>
                         </div>
