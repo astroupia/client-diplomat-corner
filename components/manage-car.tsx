@@ -21,6 +21,7 @@ import LoadingComponent from "./ui/loading-component";
 import ErrorDialog from "./dialogs/error-dialog";
 import ValidationDialog from "./dialogs/validation-dialog";
 import SuccessDialog from "./dialogs/success-dialog";
+import PaymentInfo from "./payment-info";
 
 interface ICarExtended extends ICar {
   servicePrice?: number;
@@ -721,7 +722,14 @@ const ManageCar: React.FC<ManageCarProps> = ({
                         ? `${images.length} image(s) selected.`
                         : ""}
                     </p>
+                    <p className="text-xs mt-1 text-red-400">
+                      Total image size cannot exceed 4.0MB. Please compress your
+                      images if needed.
+                    </p>
                   </div>
+
+                  {/* Payment Information */}
+                  {!isEditMode && <PaymentInfo />}
 
                   {/* Receipt Upload */}
                   {!isEditMode && (

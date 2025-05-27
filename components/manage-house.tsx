@@ -23,6 +23,7 @@ import router from "next/router";
 import ErrorDialog from "./dialogs/error-dialog";
 import ValidationDialog from "./dialogs/validation-dialog";
 import SuccessDialog from "./dialogs/success-dialog";
+import PaymentInfo from "./payment-info";
 
 interface HouseFormData {
   name: string;
@@ -678,7 +679,14 @@ const ManageHouse: React.FC<ManageHouseProps> = ({
                         ? `${images.length} image(s) selected.`
                         : ""}
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total image size cannot exceed 4.0MB. Please compress your
+                      images if needed.
+                    </p>
                   </div>
+
+                  {/* Payment Information */}
+                  {!isEditMode && <PaymentInfo />}
 
                   {/* Receipt Upload */}
                   {!isEditMode && (
