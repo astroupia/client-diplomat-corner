@@ -361,8 +361,8 @@ const FeaturedProducts = () => {
   }, [isHovering, currentIndex, itemsToShow, totalProducts, nextSlide]);
 
   // Format price with currency
-  const formatPrice = (price: number, currency: string) => {
-    return `${currency} ${price.toLocaleString()}`;
+  const formatPrice = (price: number, currency: string | undefined) => {
+    return `${currency || "USD"} ${price.toLocaleString()}`;
   };
 
   return (
