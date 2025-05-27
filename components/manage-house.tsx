@@ -679,7 +679,7 @@ const ManageHouse: React.FC<ManageHouseProps> = ({
                         ? `${images.length} image(s) selected.`
                         : ""}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs mt-1 text-red-400">
                       Total image size cannot exceed 4.0MB. Please compress your
                       images if needed.
                     </p>
