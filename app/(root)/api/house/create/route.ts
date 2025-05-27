@@ -125,6 +125,22 @@ export async function POST(
       files.push(singleFile);
     }
 
+    // Check total size of all files
+    const MAX_TOTAL_SIZE = 4.5 * 1024 * 1024; // 4.5MB in bytes
+    const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Total image size exceeds 4.5MB limit. Please reduce image sizes or upload fewer images.",
+          paymentId: "",
+        },
+        { status: 413 }
+      );
+    }
+
     const receiptFile = formData.get("receipt") as File;
 
     const paymentId = `${Date.now()}-${uuidv4()}`;
