@@ -846,10 +846,12 @@ export default function Home() {
         <WhyChooseUs />
         <ServicesSection />
       </div>
-      <PhoneNumberPopup
-        isOpen={showPhonePopup}
-        onClose={() => setShowPhonePopup(false)}
-      />
+      {isSignedIn && (
+        <PhoneNumberPopup
+          isOpen={showPhonePopup}
+          onClose={() => setShowPhonePopup(false)}
+        />
+      )}
     </div>
   );
 }
