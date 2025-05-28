@@ -21,6 +21,31 @@ interface CardContainerProps {
   advertisementType?: string;
 }
 
+interface HouseData {
+  _id: string;
+  price: number;
+  bedroom: number;
+  bathroom: number;
+  size: number;
+  rating: number;
+  likes: number;
+  status?: string;
+  userId?: string;
+  name?: string;
+  description?: string;
+  advertisementType?: string;
+  houseType?: string;
+  condition?: string;
+  maintenance?: string;
+  essentials?: string[];
+  currency?: string;
+  imageUrl?: string;
+  imageUrls?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  [key: string]: string | number | boolean | Date | string[] | undefined;
+}
+
 const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const { userId } = useAuth();
   const { user } = useUser();
@@ -38,6 +63,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const [fullHouses, setFullHouses] = useState<IHouse[]>([]);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Sort options
   const sortOptions = [
@@ -79,65 +105,65 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   useEffect(() => {
     const fetchHouses = async () => {
       try {
-        const response = await fetch(
-          `/api/house?page=${currentPage}&limit=${itemsPerPage}${
-            advertisementType ? `&advertisementType=${advertisementType}` : ""
-          }`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        setLoading(true);
+        setError(null);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Fetch user's houses if userId is available
+        if (userId) {
+          const userHousesResponse = await fetch(
+            `/api/house?userId=${userId}&limit=1000`
+          );
+          const userHousesData = await userHousesResponse.json();
+
+          if (userHousesData.success && Array.isArray(userHousesData.houses)) {
+            const formattedUserHouses = userHousesData.houses.map(
+              (house: HouseData) => ({
+                ...house,
+                price: Number(house.price),
+                bedroom: Number(house.bedroom),
+                bathroom: Number(house.bathroom),
+                size: Number(house.size),
+                rating: Number(house.rating) || 0,
+                likes: Number(house.likes) || 0,
+              })
+            );
+            setUserHouses(formattedUserHouses);
+          }
         }
 
+        // Fetch other users' houses with pagination
+        const response = await fetch(
+          `/api/house?page=${currentPage}&limit=${itemsPerPage}&excludeUserId=${
+            userId || ""
+          }`
+        );
         const data = await response.json();
+
         if (data.success && Array.isArray(data.houses)) {
-          const validatedHouses = data.houses.map((house: IHouse) => ({
+          const formattedHouses = data.houses.map((house: HouseData) => ({
             ...house,
-            price: Number(house.price) || 0,
-            bedroom: Number(house.bedroom) || 0,
-            bathroom: Number(house.bathroom) || 0,
-            size: Number(house.size) || 0,
-            houseType: house.houseType || "House",
-            currency: house.currency || "ETB",
-            advertisementType: house.advertisementType || "Sale",
+            price: Number(house.price),
+            bedroom: Number(house.bedroom),
+            bathroom: Number(house.bathroom),
+            size: Number(house.size),
+            rating: Number(house.rating) || 0,
+            likes: Number(house.likes) || 0,
           }));
 
-          // Filter out pending houses - only show active listings
-          const activeHouses = validatedHouses.filter(
-            (house: IHouse) => house.status === "Active"
+          // Append new houses to existing ones instead of replacing
+          setHouses((prevHouses) =>
+            currentPage === 1
+              ? formattedHouses
+              : [...prevHouses, ...formattedHouses]
           );
-
-          // Separate user houses from all houses
-          if (userId) {
-            const userOwnedHouses = activeHouses.filter(
-              (house: IHouse) => house.userId === userId
-            );
-            setUserHouses(userOwnedHouses);
-          }
-
-          if (currentPage === 1) {
-            setHouses(activeHouses);
-            setFullHouses(activeHouses);
-          } else {
-            setHouses((prevHouses) => [...prevHouses, ...activeHouses]);
-            setFullHouses((prevHouses) => [...prevHouses, ...activeHouses]);
-          }
-
-          setHasMore(data.pagination?.hasMore || false);
+          setHasMore(data.pagination.hasMore);
+          setTotalItems(data.pagination.total);
         } else {
-          throw new Error(
-            data.error || "Invalid data format: Expected an array of houses"
-          );
+          setError("Failed to fetch houses");
         }
-      } catch (error) {
-        console.error("Error fetching houses:", error);
-        setError((error as Error).message);
+      } catch (err) {
+        setError("Error fetching houses");
+        console.error("Error fetching houses:", err);
       } finally {
         setLoading(false);
         setIsLoadingMore(false);
@@ -145,7 +171,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     };
 
     fetchHouses();
-  }, [userId, currentPage, advertisementType]);
+  }, [currentPage, itemsPerPage, userId]);
 
   // Add click outside handler for sort dropdown
   useEffect(() => {
@@ -403,22 +429,12 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
       {/* Main Content */}
       <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-4 px-2 py-6 relative z-0">
-        {/* Listing Banner */}
+        {/* Your Listed Properties Section */}
         {userId && userHouses.length > 0 && (
           <div className="mb-8">
-            <h1 className="text-2xl font-bold">Your Listed Properties</h1>
-          </div>
-        )}
-
-        {/* Cards Grid */}
-        {loading && currentPage === 1 ? (
-          <LoadingSkeleton />
-        ) : error ? (
-          <div className="text-center text-red-500">{error}</div>
-        ) : (
-          <>
+            <h2 className="text-2xl font-bold mb-4">Your Listed Properties</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-              {houses.map((house) => (
+              {userHouses.map((house) => (
                 <CardHouse
                   key={house._id}
                   {...house}
@@ -426,28 +442,50 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
                 />
               ))}
             </div>
-
-            {/* Load More Button */}
-            {hasMore && (
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                  className={`px-6 py-3 text-sm font-medium text-white bg-[#5B8F2D] rounded-lg hover:bg-[#4A7324] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B8F2D] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-                >
-                  {isLoadingMore ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    "Load More"
-                  )}
-                </button>
-              </div>
-            )}
-          </>
+          </div>
         )}
+
+        {/* Other Listings Section */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Other Listings</h2>
+          {loading && currentPage === 1 ? (
+            <LoadingSkeleton />
+          ) : error ? (
+            <div className="text-center text-red-500">{error}</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+                {houses.map((house) => (
+                  <CardHouse
+                    key={house._id}
+                    {...house}
+                    listedBy={user?.firstName || "Unknown User"}
+                  />
+                ))}
+              </div>
+
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    onClick={loadMore}
+                    disabled={isLoadingMore}
+                    className={`px-6 py-3 text-sm font-medium text-white bg-[#5B8F2D] rounded-lg hover:bg-[#4A7324] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B8F2D] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      "Load More"
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -21,6 +21,29 @@ interface CardContainerProps {
   advertisementType?: string;
 }
 
+interface CarData {
+  _id: string;
+  price: number;
+  mileage: number;
+  year: number;
+  rating: number;
+  likes: number;
+  status?: string;
+  userId?: string;
+  name?: string;
+  description?: string;
+  advertisementType?: string;
+  transmission?: string;
+  fuel?: string;
+  bodyType?: string;
+  currency?: string;
+  imageUrl?: string;
+  imageUrls?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  [key: string]: string | number | boolean | Date | string[] | undefined;
+}
+
 const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const { userId } = useAuth();
   const { user } = useUser();
@@ -38,6 +61,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
+  const [totalItems, setTotalItems] = useState(0);
 
   const sortOptions = [
     { value: "Default", label: "Default" },
@@ -75,67 +99,59 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        const response = await fetch(
-          `/api/cars?page=${currentPage}&limit=${itemsPerPage}${
-            advertisementType ? `&advertisementType=${advertisementType}` : ""
-          }`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        setLoading(true);
+        setError(null);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Fetch user's cars if userId is available
+        if (userId) {
+          const userCarsResponse = await fetch(
+            `/api/cars?userId=${userId}&limit=1000`
+          );
+          const userCarsData = await userCarsResponse.json();
+
+          if (userCarsData.success && Array.isArray(userCarsData.cars)) {
+            const formattedUserCars = userCarsData.cars.map((car: CarData) => ({
+              ...car,
+              price: Number(car.price),
+              mileage: Number(car.mileage),
+              year: Number(car.year),
+              rating: Number(car.rating) || 0,
+              likes: Number(car.likes) || 0,
+            }));
+            setUserCars(formattedUserCars);
+          }
         }
 
+        // Fetch other users' cars with pagination
+        const response = await fetch(
+          `/api/cars?page=${currentPage}&limit=${itemsPerPage}&excludeUserId=${
+            userId || ""
+          }`
+        );
         const data = await response.json();
+
         if (data.success && Array.isArray(data.cars)) {
-          const validatedCars = data.cars.map((car: ICar) => ({
+          const formattedCars = data.cars.map((car: CarData) => ({
             ...car,
-            price: Number(car.price) || 0,
-            mileage: Number(car.mileage) || 0,
-            milesPerGallon: Number(car.milesPerGallon) || 0,
-            speed: Number(car.speed) || 0,
-            transmission: car.transmission || "N/A",
-            fuel: car.fuel || "N/A",
-            bodyType: car.bodyType || "N/A",
-            currency: car.currency || "ETB",
-            advertisementType: car.advertisementType || "Sale",
+            price: Number(car.price),
+            mileage: Number(car.mileage),
+            year: Number(car.year),
+            rating: Number(car.rating) || 0,
+            likes: Number(car.likes) || 0,
           }));
 
-          // Filter out pending cars - only show active listings
-          const activeCars = validatedCars.filter(
-            (car: ICar) => car.status === "Active"
+          // Append new cars to existing ones instead of replacing
+          setCars((prevCars) =>
+            currentPage === 1 ? formattedCars : [...prevCars, ...formattedCars]
           );
-
-          // Separate user cars from all cars
-          if (userId) {
-            const userOwnedCars = activeCars.filter(
-              (car: ICar) => car.userId === userId
-            );
-            setUserCars(userOwnedCars);
-          }
-
-          if (currentPage === 1) {
-            setCars(activeCars);
-            setFullCars(activeCars);
-          } else {
-            setCars((prevCars) => [...prevCars, ...activeCars]);
-            setFullCars((prevCars) => [...prevCars, ...activeCars]);
-          }
-
-          setHasMore(data.pagination?.hasMore || false);
+          setHasMore(data.pagination.hasMore);
+          setTotalItems(data.pagination.total);
         } else {
-          throw new Error(
-            data.error || "Invalid data format: Expected an array of cars"
-          );
+          setError("Failed to fetch cars");
         }
-      } catch (error) {
-        console.error("Error fetching cars:", error);
-        setError((error as Error).message);
+      } catch (err) {
+        setError("Error fetching cars");
+        console.error("Error fetching cars:", err);
       } finally {
         setLoading(false);
         setIsLoadingMore(false);
@@ -143,7 +159,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     };
 
     fetchCars();
-  }, [userId, currentPage, advertisementType]);
+  }, [currentPage, itemsPerPage, userId]);
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
@@ -390,22 +406,12 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
       {/* Main Content */}
       <div className="max-w-[2520px] mx-auto xl:px-20 md:px-10 sm:px-4 px-2 py-6 relative z-0">
-        {/* Listing Banner */}
+        {/* Your Listed Properties Section */}
         {userId && userCars.length > 0 && (
           <div className="mb-8">
-            <h1 className="text-2xl font-bold">Your Listed Properties</h1>
-          </div>
-        )}
-
-        {/* Cards Grid */}
-        {loading && currentPage === 1 ? (
-          <LoadingSkeleton />
-        ) : error ? (
-          <div className="text-center text-red-500">{error}</div>
-        ) : (
-          <>
+            <h2 className="text-2xl font-bold mb-4">Your Listed Properties</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
-              {cars.map((car) => (
+              {userCars.map((car) => (
                 <Card
                   key={car._id}
                   {...car}
@@ -413,28 +419,50 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
                 />
               ))}
             </div>
-
-            {/* Load More Button */}
-            {hasMore && (
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                  className={`px-6 py-3 text-sm font-medium text-white bg-[#5B8F2D] rounded-lg hover:bg-[#4A7324] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B8F2D] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-                >
-                  {isLoadingMore ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    "Load More"
-                  )}
-                </button>
-              </div>
-            )}
-          </>
+          </div>
         )}
+
+        {/* Other Listings Section */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Other Listings</h2>
+          {loading && currentPage === 1 ? (
+            <LoadingSkeleton />
+          ) : error ? (
+            <div className="text-center text-red-500">{error}</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+                {cars.map((car) => (
+                  <Card
+                    key={car._id}
+                    {...car}
+                    listedBy={user?.firstName || "Unknown User"}
+                  />
+                ))}
+              </div>
+
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    onClick={loadMore}
+                    disabled={isLoadingMore}
+                    className={`px-6 py-3 text-sm font-medium text-white bg-[#5B8F2D] rounded-lg hover:bg-[#4A7324] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B8F2D] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      "Load More"
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -20,83 +20,64 @@ export async function GET(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    await connectToDatabase();
-
-    const searchParams = req.nextUrl.searchParams;
-    const userId = searchParams.get("userId");
-    const status = searchParams.get("status");
-    const visibility = searchParams.get("visibility");
+    const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const advertisementType = searchParams.get("advertisementType");
+    const userId = searchParams.get("userId");
+    const excludeUserId = searchParams.get("excludeUserId");
+
+    await connectToDatabase();
+
+    // Build the query
+    const query: {
+      status: string;
+      advertisementType?: string;
+      userId?: string | { $ne: string };
+    } = {
+      status: "Active",
+    };
+
+    // Add filters
+    if (advertisementType) {
+      query.advertisementType = advertisementType;
+    }
+    if (userId) {
+      query.userId = userId;
+    }
+    if (excludeUserId) {
+      query.userId = { $ne: excludeUserId };
+    }
+
+    // Calculate skip value for pagination
     const skip = (page - 1) * limit;
 
-    const query: Record<string, string> = { status: "Active" };
-    if (userId) query.userId = userId;
-    if (status) query.status = status;
-    if (visibility) query.visibility = visibility;
-    if (advertisementType) query.advertisementType = advertisementType;
-
-    console.log("House API Query:", query);
-
     // Get total count for pagination
-    const totalCount = await House.countDocuments(query);
+    const total = await House.countDocuments(query);
 
-    // Get paginated results
+    // Fetch houses with pagination and filters
     const houses = await House.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    console.log(`Found ${houses.length} houses in the database (page ${page})`);
-
-    const hasMore = skip + houses.length < totalCount;
-
-    // Convert Mongoose documents to plain objects and ensure they match IHouse interface
-    const formattedHouses = houses.map((house) => ({
-      _id: house._id.toString(),
-      name: house.name,
-      userId: house.userId,
-      description: house.description,
-      advertisementType: house.advertisementType,
-      price: house.price,
-      paymentMethod: house.paymentMethod,
-      bedroom: house.bedroom,
-      parkingSpace: house.parkingSpace,
-      bathroom: house.bathroom,
-      size: house.size,
-      houseType: house.houseType,
-      condition: house.condition || "",
-      maintenance: house.maintenance || "",
-      essentials: house.essentials || [],
-      currency: house.currency || "",
-      imageUrl: house.imageUrl,
-      imageUrls: house.imageUrls || [],
-      paymentId: house.paymentId,
-      visiblity: house.visiblity,
-      status: house.status,
-      createdAt: house.createdAt,
-      updatedAt: house.updatedAt,
-    }));
+    // Calculate pagination info
+    const hasMore = skip + houses.length < total;
 
     return NextResponse.json({
       success: true,
-      houses: formattedHouses,
+      houses: houses.map((house) => house.toObject()),
       pagination: {
         page,
         limit,
-        total: totalCount,
+        total,
         hasMore,
       },
     });
   } catch (error) {
-    console.error("Error fetching houses:", error);
+    console.error("Error in houses API:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
-      },
+      { success: false, error: "Internal Server Error" },
       { status: 500 }
     );
   }

@@ -83,15 +83,29 @@ export async function GET(
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
     const advertisementType = searchParams.get("advertisementType");
+    const userId = searchParams.get("userId");
+    const excludeUserId = searchParams.get("excludeUserId");
 
     await connectToDatabase();
 
     // Build the query
-    const query: { status: string; advertisementType?: string } = {
+    const query: {
+      status: string;
+      advertisementType?: string;
+      userId?: string | { $ne: string };
+    } = {
       status: "Active",
     };
+
+    // Add filters
     if (advertisementType) {
       query.advertisementType = advertisementType;
+    }
+    if (userId) {
+      query.userId = userId;
+    }
+    if (excludeUserId) {
+      query.userId = { $ne: excludeUserId };
     }
 
     // Calculate skip value for pagination
