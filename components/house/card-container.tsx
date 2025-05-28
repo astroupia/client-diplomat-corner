@@ -447,7 +447,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
         {/* Other Listings Section */}
         <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Other Listings</h2>
+          <h2 className="text-2xl font-bold mb-4">Listings</h2>
           {loading && currentPage === 1 ? (
             <LoadingSkeleton />
           ) : error ? (
