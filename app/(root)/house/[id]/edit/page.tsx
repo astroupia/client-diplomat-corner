@@ -79,9 +79,8 @@ export default function EditHousePage({ params }: EditHousePageProps) {
   if (!house) return <NotFoundScreen />;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Edit House Listing</h1>
-      <ManageHouse initialData={house} />
+    <div className="container mx-auto px-2 py-8">
+      <ManageHouse isEditMode={true} initialData={house} />
     </div>
   );
 }

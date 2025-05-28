@@ -19,7 +19,7 @@ import { useState, useRef, useEffect } from "react";
 import MaxWidthWrapper from "./max-width-wrapper";
 import { useUser } from "@clerk/nextjs";
 import LoadingComponent from "./ui/loading-component";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 import ErrorDialog from "./dialogs/error-dialog";
 import ValidationDialog from "./dialogs/validation-dialog";
 import SuccessDialog from "./dialogs/success-dialog";
@@ -61,6 +61,7 @@ const ManageHouse: React.FC<ManageHouseProps> = ({
   isEditMode = false,
 }) => {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [formData, setFormData] = useState<HouseFormData>({
     name: initialData?.name || "",
     bedroom: initialData?.bedroom || 0,
