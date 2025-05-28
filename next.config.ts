@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
       "media-api.diplomatcorner.net",
       "utfs.io",
       "files.stripe.com",
+      "www.gravatar.com",
+      "avatars.githubusercontent.com",
     ],
   },
   eslint: {
