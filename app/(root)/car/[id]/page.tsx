@@ -15,6 +15,7 @@ import {
   BadgeCheck,
   ChevronLeft,
   ChevronRight,
+  Phone,
 } from "lucide-react";
 import type { ICar } from "@/lib/models/car.model";
 import { ContactSellerDialog } from "@/components/dialogs";
@@ -458,24 +459,36 @@ export default function CarDetails() {
             </div>
           </div>
 
-          {/* Contact section - Conditional rendering based on advertisement type and user role */}
-          {user && user.role !== "admin" && (
-            <div className="mt-8">
-              {car.advertisementType === "Rent" ? (
-                <button
-                  onClick={() => setIsDialogOpen(true)}
-                  className="w-full bg-primary text-white font-semibold py-3 px-6 rounded-md hover:bg-primary/80 transition-colors duration-200"
-                >
-                  Inquire Now
-                </button>
-              ) : (
-                user.phoneNumber && (
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Contact Seller</h3>
-                    <p className="text-gray-600">Phone: {user.phoneNumber}</p>
-                  </div>
-                )
-              )}
+          {/* Contact section - Show phone number for all cars */}
+          {user && user.role !== "admin" && user.phoneNumber && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Phone className="text-primary" size={20} />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Contact Seller</h3>
+              </div>
+              <div className="flex items-center gap-2 text-gray-600">
+                <span className="font-medium">Phone:</span>
+                <span className="text-primary font-semibold">{user.phoneNumber}</span>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Show inquiry button only for rental cars */}
+          {user && user.role !== "admin" && car.advertisementType === "Rent" && (
+            <div className="mt-4">
+              <button
+                onClick={() => setIsDialogOpen(true)}
+                className="w-full bg-primary text-white font-semibold py-3 px-6 rounded-md hover:bg-primary/80 transition-colors duration-200"
+              >
+                Inquire Now
+              </button>
             </div>
           )}
         </div>
