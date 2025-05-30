@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       "www.gravatar.com",
       "avatars.githubusercontent.com",
     ],
+    unoptimized: true,
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
