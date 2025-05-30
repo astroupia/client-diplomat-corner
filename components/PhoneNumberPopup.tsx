@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Phone, Shield, Info } from "lucide-react";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 interface PhoneNumberPopupProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface PhoneNumberPopupProps {
 }
 
 export function PhoneNumberPopup({ isOpen, onClose }: PhoneNumberPopupProps) {
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -34,7 +35,7 @@ export function PhoneNumberPopup({ isOpen, onClose }: PhoneNumberPopupProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ phoneNumber: `+251${phoneNumber}` }),
+        body: JSON.stringify({ phoneNumber }),
       });
 
       if (!response.ok) {
@@ -74,25 +75,16 @@ export function PhoneNumberPopup({ isOpen, onClose }: PhoneNumberPopupProps) {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 px-3 h-12 border rounded-md bg-gray-50">
-                <span className="text-xl">🇪🇹</span>
-                <span className="text-gray-600">+251</span>
-              </div>
-              <Input
-                id="phone"
-                placeholder="9XXXXXXXX"
-                value={phoneNumber}
-                onChange={(e) => {
-                  // Only allow numbers and limit to 9 digits
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 9);
-                  setPhoneNumber(value);
-                }}
-                disabled={isLoading}
-                className="h-12 text-lg flex-1"
-              />
-            </div>
-            <p className="text-xs text-gray-500 pl-1">Enter your 9-digit phone number</p>
+            <PhoneInput
+              placeholder="Enter phone number"
+              value={phoneNumber}
+              onChange={setPhoneNumber}
+              defaultCountry="ET"
+              international
+              className="!h-12 !w-full !text-lg phone-input" // Optional: tweak appearance
+              disabled={isLoading}
+            />
+            <p className="text-xs text-gray-500 pl-1">Enter a valid international phone number</p>
           </div>
 
           <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
@@ -123,4 +115,4 @@ export function PhoneNumberPopup({ isOpen, onClose }: PhoneNumberPopupProps) {
       </DialogContent>
     </Dialog>
   );
-} 
+}
