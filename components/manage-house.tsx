@@ -868,7 +868,7 @@ const ManageHouse: React.FC<ManageHouseProps> = ({
                     Currency
                   </label>
                   <div className="flex gap-2">
-                    {["ETB", "USD"].map((option) => (
+                    {["ETB", "USD", "EUR", "GBP"].map((option) => (
                       <button
                         key={option}
                         type="button"

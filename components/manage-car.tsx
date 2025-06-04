@@ -81,7 +81,7 @@ const ManageCar: React.FC<ManageCarProps> = ({
     engine: initialData?.engine || "",
     maintenance: initialData?.maintenance || "",
     price: initialData?.price || 0,
-    servicePrice: initialData?.servicePrice || 0,
+    servicePrice: initialData?.servicePrice || 3000,
     description: initialData?.description || "",
     advertisementType:
       (initialData?.advertisementType as "Rent" | "Sale") || "Sale",
@@ -925,7 +925,7 @@ const ManageCar: React.FC<ManageCarProps> = ({
                     Currency
                   </label>
                   <div className="flex gap-2">
-                    {["ETB", "USD"].map((option) => (
+                    {["ETB", "USD", "EUR", "GBP"].map((option) => (
                       <button
                         key={option}
                         type="button"
