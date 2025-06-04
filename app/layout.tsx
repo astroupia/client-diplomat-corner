@@ -2,6 +2,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import "react-phone-number-input/style.css";
 
 const inter = Inter({ subsets: ["latin"] });
 

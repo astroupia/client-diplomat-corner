@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Phone, Shield, Info } from "lucide-react";
@@ -66,10 +71,13 @@ export function PhoneNumberPopup({ isOpen, onClose }: PhoneNumberPopupProps) {
             <Phone className="w-10 h-10 text-[#5B8F2D]" />
           </div>
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#5B8F2D]">Add Your Phone Number</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-[#5B8F2D]">
+              Add Your Phone Number
+            </DialogTitle>
           </DialogHeader>
           <p className="text-gray-500 mt-2 mb-6">
-            We need your phone number to enhance your experience and keep you updated.
+            We need your phone number to enhance your experience and keep you
+            updated.
           </p>
         </div>
 
@@ -84,18 +92,21 @@ export function PhoneNumberPopup({ isOpen, onClose }: PhoneNumberPopupProps) {
               className="!h-12 !w-full !text-lg phone-input" // Optional: tweak appearance
               disabled={isLoading}
             />
-            <p className="text-xs text-gray-500 pl-1">Enter a valid international phone number</p>
+            <p className="text-xs text-gray-500 pl-1">
+              Enter a valid international phone number
+            </p>
           </div>
 
           <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
             <Info className="w-5 h-5 text-[#5B8F2D] mt-0.5" />
             <p className="text-sm text-gray-600">
-              Your phone number will be used for important updates and notifications. We never share your information with third parties.
+              Your phone number will be used for important updates and
+              notifications. We never share your information with third parties.
             </p>
           </div>
 
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isLoading}
             className="w-full h-12 text-lg bg-[#5B8F2D] hover:bg-[#5B8F2D]/90"
           >
