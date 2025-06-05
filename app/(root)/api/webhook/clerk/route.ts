@@ -6,6 +6,11 @@ import { NextRequest, NextResponse } from "next/server";
 import User from "@/lib/models/user.model";
 import Car from "@/lib/models/car.model";
 import House from "@/lib/models/house.model";
+import Notification from "@/lib/models/notification.model";
+import Review from "@/lib/models/review.model";
+import Report from "@/lib/models/report.model";
+import Request from "@/lib/models/request.model";
+import Payment from "@/lib/models/payment.model";
 
 // Define a more specific type for the Clerk user data
 interface ClerkUserData {
@@ -169,21 +174,42 @@ export async function POST(req: NextRequest) {
             { new: true }
           );
 
-          // Update all cars associated with the old Clerk ID
-          await Car.updateMany({ userId: oldClerkId }, { userId: id });
+          // Update all related records
+          const updatePromises = [
+            // Update cars
+            Car.updateMany({ userId: oldClerkId }, { userId: id }),
+            // Update houses
+            House.updateMany({ userId: oldClerkId }, { userId: id }),
+            // Update notifications
+            Notification.updateMany({ userId: oldClerkId }, { userId: id }),
+            // Update reviews (both as reviewer and reviewee)
+            Review.updateMany({ userId: oldClerkId }, { userId: id }),
+            Review.updateMany(
+              { targetUserId: oldClerkId },
+              { targetUserId: id }
+            ),
+            // Update reports (both as reporter and reported entity)
+            Report.updateMany({ reportedBy: oldClerkId }, { reportedBy: id }),
+            Report.updateMany(
+              { entityId: oldClerkId, entityType: "user" },
+              { entityId: id }
+            ),
+            // Update requests (both as sender and receiver)
+            Request.updateMany({ fromUserId: oldClerkId }, { fromUserId: id }),
+            Request.updateMany({ toUserId: oldClerkId }, { toUserId: id }),
+            // Update payments
+            Payment.updateMany({ userId: oldClerkId }, { userId: id }),
+          ];
 
-          // Update all houses associated with the old Clerk ID
-          await House.updateMany({ userId: oldClerkId }, { userId: id });
+          // Execute all updates
+          await Promise.all(updatePromises);
 
-          console.log(
-            "User updated successfully:",
-            JSON.stringify(updatedUser)
-          );
+          console.log("User and all related records updated successfully");
           return NextResponse.json(
             {
               message: "User updated successfully",
               user: updatedUser,
-              note: "Updated existing user and migrated associated records",
+              note: "Updated existing user and migrated all associated records",
             },
             { status: 200 }
           );
@@ -219,61 +245,40 @@ export async function POST(req: NextRequest) {
         email_addresses,
         image_url,
         profile_image_url,
+        external_accounts,
       } = userData;
 
       // Get primary email from the email addresses array
-      const primaryEmail = email_addresses?.[0]?.email_address;
+      const primaryEmail = email_addresses?.[0]?.email_address || "";
 
-      // Get profile image
-      const userImageUrl = profile_image_url || image_url || "";
-
-      // Prepare user data for our API
-      const userDbData: {
-        clerkId: string;
-        firstName: string | null;
-        lastName: string | null;
-        imageUrl: string;
-        email?: string;
-      } = {
-        clerkId: id,
-        firstName: first_name,
-        lastName: last_name,
-        imageUrl: userImageUrl,
-      };
-
-      // Only include email if it exists
-      if (primaryEmail) {
-        userDbData.email = primaryEmail;
+      // Get profile image - try profile_image_url first, then image_url, then from external accounts
+      let userImageUrl = profile_image_url || image_url || "";
+      if (!userImageUrl && external_accounts?.[0]?.image_url) {
+        userImageUrl = external_accounts[0].image_url;
       }
 
-      // Determine the API URL to use
-      const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
-      if (!apiUrl) {
-        console.error("NEXT_PUBLIC_SERVER_URL is missing");
-        return NextResponse.json(
-          { error: "Server URL not configured" },
-          { status: 500 }
-        );
-      }
+      // Connect to database
+      await connectToDatabase();
 
-      // Call our API to update the user
-      const response = await fetch(`${apiUrl}/api/users`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+      // Find and update the user
+      const updatedUser = await User.findOneAndUpdate(
+        { clerkId: id },
+        {
+          email: primaryEmail,
+          firstName: first_name || "",
+          lastName: last_name || "",
+          imageUrl: userImageUrl,
         },
-        body: JSON.stringify(userDbData),
-      });
+        { new: true }
+      );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to update user");
+      if (!updatedUser) {
+        throw new Error("User not found");
       }
 
-      console.log("User updated successfully:", JSON.stringify(result));
+      console.log("User updated successfully:", JSON.stringify(updatedUser));
       return NextResponse.json(
-        { message: "User updated successfully", user: result.user },
+        { message: "User updated successfully", user: updatedUser },
         { status: 200 }
       );
     } catch (error) {
@@ -296,37 +301,52 @@ export async function POST(req: NextRequest) {
 
   if (eventType === "user.deleted") {
     try {
-      // Extract the Clerk user ID
+      // Extract data from the Clerk webhook payload
       const userData = evt.data as unknown as ClerkUserData;
       const { id } = userData;
 
-      // Determine the API URL to use
-      const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
-      if (!apiUrl) {
-        console.error("NEXT_PUBLIC_SERVER_URL is missing");
+      // Connect to database
+      await connectToDatabase();
+
+      // Find the user first to ensure they exist
+      const user = await User.findOne({ clerkId: id });
+      if (!user) {
         return NextResponse.json(
-          { error: "Server URL not configured" },
-          { status: 500 }
+          { message: "User not found, nothing to delete" },
+          { status: 200 }
         );
       }
 
-      // Call our API to delete the user
-      const response = await fetch(`${apiUrl}/api/users/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Delete all related records first
+      const deletePromises = [
+        // Delete cars
+        Car.deleteMany({ userId: id }),
+        // Delete houses
+        House.deleteMany({ userId: id }),
+        // Delete notifications
+        Notification.deleteMany({ userId: id }),
+        // Delete reviews (both as reviewer and reviewee)
+        Review.deleteMany({ userId: id }),
+        Review.deleteMany({ targetUserId: id }),
+        // Delete reports (both as reporter and reported entity)
+        Report.deleteMany({ reportedBy: id }),
+        Report.deleteMany({ entityId: id, entityType: "user" }),
+        // Delete requests (both as sender and receiver)
+        Request.deleteMany({ fromUserId: id }),
+        Request.deleteMany({ toUserId: id }),
+        // Delete payments
+        Payment.deleteMany({ userId: id }),
+      ];
 
-      const result = await response.json();
+      // Execute all deletes
+      await Promise.all(deletePromises);
 
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to delete user");
-      }
+      // Finally delete the user
+      await User.deleteOne({ clerkId: id });
 
-      console.log("User deleted successfully:", JSON.stringify(result));
+      console.log("User and all related records deleted successfully");
       return NextResponse.json(
-        { message: "User deleted successfully" },
+        { message: "User and all related records deleted successfully" },
         { status: 200 }
       );
     } catch (error) {
@@ -347,9 +367,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // If we get here, we've received a webhook event we're not explicitly handling
-  console.log(`Unhandled webhook event type: ${eventType}`);
-  return new NextResponse(`Webhook event received: ${eventType}`, {
-    status: 200,
-  });
+  // Return a 200 response for any other event types
+  return NextResponse.json(
+    { message: `Unhandled event type: ${eventType}` },
+    { status: 200 }
+  );
 }
