@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Diplomat Corner",
-  description: "Diplomat Corner - Your trusted marketplace",
+  description: "Diplomat Corner - Your trusted marketplace For Diplomats",
 };
 
 export default function RootLayout({
