@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { connectToDatabase } from "@/lib/db-connect";
 import { NextRequest, NextResponse } from "next/server";
+import User from "@/lib/models/user.model";
 
 // Define a more specific type for the Clerk user data
 interface ClerkUserData {
@@ -116,49 +117,37 @@ export async function POST(req: NextRequest) {
         userImageUrl = external_accounts[0].image_url;
       }
 
-      // Prepare user data for our API
-      const userDbData = {
+      // Connect to database
+      await connectToDatabase();
+
+      // Check if user already exists
+      const existingUser = await User.findOne({ clerkId: id });
+      if (existingUser) {
+        return NextResponse.json(
+          { message: "User already exists", user: existingUser },
+          { status: 200 }
+        );
+      }
+
+      // Create timestamp in ISO format
+      const timestamp = new Date().toISOString();
+
+      // Create new user directly
+      const newUser = await User.create({
         clerkId: id,
         email: primaryEmail,
         firstName: first_name || "",
         lastName: last_name || "",
         imageUrl: userImageUrl,
         role: "customer",
-      };
-
-      console.log("Prepared user data:", JSON.stringify(userDbData));
-
-
-      // Determine the API URL to use
-      const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
-      
-      if (!apiUrl) {
-        console.error("NEXT_PUBLIC_SERVER_URL is missing");
-        return NextResponse.json(
-          { error: "Server URL not configured" },
-          { status: 500 }
-        );
-      }
-
-
-      // Call our API to create the user
-      const response = await fetch(`${apiUrl}/api/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userDbData),
+        address: "",
+        phoneNumber: "",
+        timestamp: timestamp,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to create user");
-      }
-
-      console.log("User created successfully:", JSON.stringify(result));
+      console.log("User created successfully:", JSON.stringify(newUser));
       return NextResponse.json(
-        { message: "User created successfully", user: result.user },
+        { message: "User created successfully", user: newUser },
         { status: 200 }
       );
     } catch (error) {
