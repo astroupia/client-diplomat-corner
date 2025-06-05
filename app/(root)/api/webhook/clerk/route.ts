@@ -4,6 +4,8 @@ import { WebhookEvent } from "@clerk/nextjs/server";
 import { connectToDatabase } from "@/lib/db-connect";
 import { NextRequest, NextResponse } from "next/server";
 import User from "@/lib/models/user.model";
+import Car from "@/lib/models/car.model";
+import House from "@/lib/models/house.model";
 
 // Define a more specific type for the Clerk user data
 interface ClerkUserData {
@@ -120,47 +122,85 @@ export async function POST(req: NextRequest) {
       // Connect to database
       await connectToDatabase();
 
-      // Check if user already exists
-      const existingUser = await User.findOne({ clerkId: id });
-      if (existingUser) {
+      try {
+        // Try to create new user
+        const timestamp = new Date().toISOString();
+        const newUser = await User.create({
+          clerkId: id,
+          email: primaryEmail,
+          firstName: first_name || "",
+          lastName: last_name || "",
+          imageUrl: userImageUrl,
+          role: "customer",
+          address: "",
+          phoneNumber: "",
+          timestamp: timestamp,
+        });
+
+        console.log("User created successfully:", JSON.stringify(newUser));
         return NextResponse.json(
-          { message: "User already exists", user: existingUser },
+          { message: "User created successfully", user: newUser },
           { status: 200 }
         );
+      } catch (error) {
+        // If error is a duplicate key error
+        if (
+          error instanceof Error &&
+          error.message.includes("duplicate key error")
+        ) {
+          // Find the existing user with this email
+          const existingUser = await User.findOne({ email: primaryEmail });
+
+          if (!existingUser) {
+            throw new Error("Duplicate email found but user not found");
+          }
+
+          const oldClerkId = existingUser.clerkId;
+
+          // Update the existing user with new Clerk ID and data
+          const updatedUser = await User.findOneAndUpdate(
+            { email: primaryEmail },
+            {
+              clerkId: id,
+              firstName: first_name || existingUser.firstName,
+              lastName: last_name || existingUser.lastName,
+              imageUrl: userImageUrl || existingUser.imageUrl,
+            },
+            { new: true }
+          );
+
+          // Update all cars associated with the old Clerk ID
+          await Car.updateMany({ userId: oldClerkId }, { userId: id });
+
+          // Update all houses associated with the old Clerk ID
+          await House.updateMany({ userId: oldClerkId }, { userId: id });
+
+          console.log(
+            "User updated successfully:",
+            JSON.stringify(updatedUser)
+          );
+          return NextResponse.json(
+            {
+              message: "User updated successfully",
+              user: updatedUser,
+              note: "Updated existing user and migrated associated records",
+            },
+            { status: 200 }
+          );
+        }
+        throw error; // Re-throw if it's not a duplicate key error
       }
-
-      // Create timestamp in ISO format
-      const timestamp = new Date().toISOString();
-
-      // Create new user directly
-      const newUser = await User.create({
-        clerkId: id,
-        email: primaryEmail,
-        firstName: first_name || "",
-        lastName: last_name || "",
-        imageUrl: userImageUrl,
-        role: "customer",
-        address: "",
-        phoneNumber: "",
-        timestamp: timestamp,
-      });
-
-      console.log("User created successfully:", JSON.stringify(newUser));
-      return NextResponse.json(
-        { message: "User created successfully", user: newUser },
-        { status: 200 }
-      );
     } catch (error) {
-      console.error("Error creating user:", error);
+      console.error("Error creating/updating user:", error);
       if (error instanceof Error) {
         return NextResponse.json(
-          { error: "Failed to create user", details: error.message },
+          { error: "Failed to create/update user", details: error.message },
           { status: 500 }
         );
       }
       return NextResponse.json(
         {
-          error: "Failed to create user",
+          error: "Failed to create/update user",
           details: "An unknown error occurred",
         },
         { status: 500 }
