@@ -814,8 +814,9 @@ export default function Home() {
   const [showPhonePopup, setShowPhonePopup] = useState(false);
 
   useEffect(() => {
-    const checkUserPhone = async () => {
-      if (isSignedIn && userId) {
+    // Only check for phone number if user is signed in
+    if (isSignedIn && userId) {
+      const checkUserPhone = async () => {
         try {
           const response = await fetch(`/api/users?clerkId=${userId}`);
           if (!response.ok) {
@@ -831,10 +832,10 @@ export default function Home() {
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
-      }
-    };
+      };
 
-    checkUserPhone();
+      checkUserPhone();
+    }
   }, [isSignedIn, userId]);
 
   return (
