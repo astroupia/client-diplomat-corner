@@ -25,6 +25,13 @@ interface ApiResponse {
   };
 }
 
+interface CarQuery {
+  userId?: string | { $ne: string };
+  advertisementType?: string;
+  visiblity: "Public" | "Private";
+  status: "Active" | "Pending";
+}
+
 async function uploadImage(
   file: File,
   folder: "public_images" | "receipts"
@@ -82,61 +89,55 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
-    const advertisementType = searchParams.get("advertisementType");
     const userId = searchParams.get("userId");
     const excludeUserId = searchParams.get("excludeUserId");
+    const advertisementType = searchParams.get("advertisementType");
 
     await connectToDatabase();
 
     // Build the query
-    const query: {
-      status: string;
-      advertisementType?: string;
-      userId?: string | { $ne: string };
-    } = {
+    const query: CarQuery = {
+      visiblity: "Public",
       status: "Active",
     };
 
     // Add filters
-    if (advertisementType) {
-      query.advertisementType = advertisementType;
-    }
     if (userId) {
       query.userId = userId;
     }
     if (excludeUserId) {
       query.userId = { $ne: excludeUserId };
     }
+    if (advertisementType) {
+      query.advertisementType = advertisementType;
+    }
 
-    // Calculate skip value for pagination
+    // Calculate pagination
     const skip = (page - 1) * limit;
 
     // Get total count for pagination
     const total = await Car.countDocuments(query);
 
-    // Fetch cars with pagination and filters
+    // Fetch cars with pagination
     const cars = await Car.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    // Calculate pagination info
-    const hasMore = skip + cars.length < total;
-
     return NextResponse.json({
       success: true,
-      cars: cars.map((car) => car.toObject()),
+      cars,
       pagination: {
+        total,
         page,
         limit,
-        total,
-        hasMore,
+        hasMore: skip + cars.length < total,
       },
     });
   } catch (error) {
-    console.error("Error in cars API:", error);
+    console.error("Error fetching cars:", error);
     return NextResponse.json(
-      { success: false, error: "Internal Server Error" },
+      { success: false, error: "Failed to fetch cars" },
       { status: 500 }
     );
   }
@@ -145,7 +146,6 @@ export async function GET(
 export async function POST(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse>> {
-  // Redirect POST requests to the create route
   const createUrl = new URL("/api/cars/create", req.url);
   return NextResponse.redirect(createUrl) as NextResponse<ApiResponse>;
 }

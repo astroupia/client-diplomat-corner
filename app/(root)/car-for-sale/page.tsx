@@ -7,9 +7,9 @@ export const metadata: Metadata = {
   description: "Browse all cars available for sale on Diplomat Corner",
 };
 
-export default function CarForSalePage() {
+export default function CarForSale() {
   return (
-    <div className="container mx-auto py-2">
+    <div className="min-h-screen bg-gray-50">
       <CardContainer advertisementType="Sale" />
     </div>
   );

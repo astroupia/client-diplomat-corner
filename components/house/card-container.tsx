@@ -76,31 +76,40 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
   // Filter options for houses
   const filterOptions = [
-    // Only show advertisement type filters if no specific type is provided
-    ...(advertisementType
-      ? []
-      : [
-          { value: "For Rent", label: "For Rent" },
-          { value: "For Sale", label: "For Sale" },
-        ]),
     // Property type filters
-    { value: "Apartment", label: "Apartment" },
-    { value: "House", label: "House" },
-    { value: "Villa", label: "Villa" },
-    { value: "Condo", label: "Condo" },
-    { value: "Townhouse", label: "Townhouse" },
+    { value: "House", label: "House", category: "houseType" },
+    { value: "Apartment", label: "Apartment", category: "houseType" },
+    { value: "Guest House", label: "Guest House", category: "houseType" },
     // Bedroom filters
-    { value: "1", label: "1 Bedroom" },
-    { value: "2", label: "2 Bedrooms" },
-    { value: "3", label: "3 Bedrooms" },
-    { value: "4+", label: "4+ Bedrooms" },
+    { value: "1", label: "1 Bedroom", category: "bedroom" },
+    { value: "2", label: "2 Bedrooms", category: "bedroom" },
+    { value: "3", label: "3 Bedrooms", category: "bedroom" },
+    { value: "4+", label: "4+ Bedrooms", category: "bedroom" },
     // Bathroom filters
-    { value: "1", label: "1 Bathroom" },
-    { value: "2", label: "2 Bathrooms" },
-    { value: "3+", label: "3+ Bathrooms" },
+    { value: "1", label: "1 Bathroom", category: "bathroom" },
+    { value: "2", label: "2 Bathrooms", category: "bathroom" },
+    { value: "3+", label: "3+ Bathrooms", category: "bathroom" },
+    // Size range filters
+    { value: "0-100", label: "0-100 sqm", category: "size" },
+    { value: "100-200", label: "100-200 sqm", category: "size" },
+    { value: "200-300", label: "200-300 sqm", category: "size" },
+    { value: "300+", label: "300+ sqm", category: "size" },
+    // Price range filters
+    { value: "0-1000", label: "0-1,000", category: "price" },
+    { value: "1000-5000", label: "1,000-5,000", category: "price" },
+    { value: "5000-10000", label: "5,000-10,000", category: "price" },
+    { value: "10000+", label: "10,000+", category: "price" },
+    // Essentials filters
+    { value: "WiFi", label: "WiFi", category: "essentials" },
+    { value: "Furnished", label: "Furnished", category: "essentials" },
+    { value: "Play Ground", label: "Play Ground", category: "essentials" },
+    { value: "Living Area", label: "Living Area", category: "essentials" },
+    { value: "Gym", label: "Gym", category: "essentials" },
+    { value: "Outdoor", label: "Outdoor", category: "essentials" },
+    { value: "Dining Area", label: "Dining Area", category: "essentials" },
+    { value: "Jacuzzi", label: "Jacuzzi", category: "essentials" },
+    { value: "Steam", label: "Steam", category: "essentials" },
   ];
-
-  const allFilterOptions = [...filterOptions];
 
   useEffect(() => {
     const fetchHouses = async () => {
@@ -111,7 +120,9 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
         // Fetch user's houses if userId is available
         if (userId) {
           const userHousesResponse = await fetch(
-            `/api/house?userId=${userId}&limit=1000`
+            `/api/house?userId=${userId}&limit=1000${
+              advertisementType ? `&advertisementType=${advertisementType}` : ""
+            }`
           );
           const userHousesData = await userHousesResponse.json();
 
@@ -131,10 +142,12 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
           }
         }
 
-        // Fetch other users' houses with pagination
+        // Fetch other users' houses with pagination and advertisement type filter
         const response = await fetch(
           `/api/house?page=${currentPage}&limit=${itemsPerPage}&excludeUserId=${
             userId || ""
+          }${
+            advertisementType ? `&advertisementType=${advertisementType}` : ""
           }`
         );
         const data = await response.json();
@@ -156,6 +169,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
               ? formattedHouses
               : [...prevHouses, ...formattedHouses]
           );
+          setFullHouses(formattedHouses); // Store the full set of houses for filtering
           setHasMore(data.pagination.hasMore);
           setTotalItems(data.pagination.total);
         } else {
@@ -171,7 +185,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     };
 
     fetchHouses();
-  }, [currentPage, itemsPerPage, userId]);
+  }, [currentPage, itemsPerPage, userId, advertisementType]);
 
   // Add click outside handler for sort dropdown
   useEffect(() => {
@@ -218,6 +232,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     setHouses(sortedHouses);
   };
 
+  // Handle filtering with improved logic
   const handleFilterChange = (filters: string[]) => {
     setActiveFilters(filters);
     if (filters.length === 0) {
@@ -225,38 +240,54 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
       return;
     }
 
+    // Group filters by category
+    const groupedFilters = filters.reduce((acc, filter) => {
+      const option = filterOptions.find((opt) => opt.value === filter);
+      if (option) {
+        if (!acc[option.category]) {
+          acc[option.category] = [];
+        }
+        acc[option.category].push(filter);
+      }
+      return acc;
+    }, {} as Record<string, string[]>);
+
     // Apply multiple filter conditions
     const filteredHouses = fullHouses.filter((house) => {
-      return filters.some((filter) => {
-        // Check advertisement type filters
-        if (filter === "For Rent") return house.advertisementType === "Rent";
-        if (filter === "For Sale") return house.advertisementType === "Sale";
+      // Check if house matches all filter categories
+      return Object.entries(groupedFilters).every(([category, values]) => {
+        // If no filters for this category, return true
+        if (values.length === 0) return true;
 
-        // Check house type filters
-        if (["House", "Apartment", "Guest House"].includes(filter)) {
-          return house.houseType === filter;
-        }
-
-        // Check bedroom filters
-        if (filter === "1-bedroom") return house.bedroom === 1;
-        if (filter === "2-bedroom") return house.bedroom === 2;
-        if (filter === "3-bedroom") return house.bedroom >= 3;
-
-        // Check features
-        if (
-          [
-            "parking",
-            "WiFi",
-            "Furnished",
-            "Gym",
-            "Outdoor",
-            "Dining Area",
-          ].includes(filter)
-        ) {
-          return house.essentials?.includes(filter);
-        }
-
-        return false;
+        // Check each filter in the category
+        return values.some((value) => {
+          switch (category) {
+            case "houseType":
+              return house.houseType === value;
+            case "bedroom":
+              if (value === "4+") return house.bedroom >= 4;
+              return house.bedroom === parseInt(value);
+            case "bathroom":
+              if (value === "3+") return house.bathroom >= 3;
+              return house.bathroom === parseInt(value);
+            case "size":
+              const [minSize, maxSize] = value.split("-").map(Number);
+              return (
+                house.size >= minSize &&
+                (maxSize ? house.size <= maxSize : true)
+              );
+            case "price":
+              const [minPrice, maxPrice] = value.split("-").map(Number);
+              return (
+                house.price >= minPrice &&
+                (maxPrice ? house.price <= maxPrice : true)
+              );
+            case "essentials":
+              return house.essentials?.includes(value);
+            default:
+              return false;
+          }
+        });
       });
     });
 
@@ -297,8 +328,6 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
       </div>
     );
   }
-
-  const displayedHouses = houses.slice(0, currentPage * itemsPerPage);
 
   return (
     <div className="w-full">

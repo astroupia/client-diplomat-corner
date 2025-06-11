@@ -1,9 +1,9 @@
 import CardContainer from "@/components/car/card-container";
 
-export default function CarForRentPage() {
+export default function CarForRent() {
   return (
-    <main className="pt-20">
+    <div className="min-h-screen bg-gray-50">
       <CardContainer advertisementType="Rent" />
-    </main>
+    </div>
   );
 }

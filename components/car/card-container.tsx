@@ -77,23 +77,31 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     ...(advertisementType
       ? []
       : [
-          { value: "For Rent", label: "For Rent" },
-          { value: "For Sale", label: "For Sale" },
+          {
+            value: "For Rent",
+            label: "For Rent",
+            category: "advertisementType",
+          },
+          {
+            value: "For Sale",
+            label: "For Sale",
+            category: "advertisementType",
+          },
         ]),
     // Body type filters
-    { value: "Sedan", label: "Sedan" },
-    { value: "SUV", label: "SUV" },
-    { value: "Truck", label: "Truck" },
-    { value: "Hatchback", label: "Hatchback" },
-    { value: "Minivan", label: "Minivan" },
+    { value: "Sedan", label: "Sedan", category: "bodyType" },
+    { value: "SUV", label: "SUV", category: "bodyType" },
+    { value: "Truck", label: "Truck", category: "bodyType" },
+    { value: "Hatchback", label: "Hatchback", category: "bodyType" },
+    { value: "Minivan", label: "Minivan", category: "bodyType" },
     // Fuel type filters
-    { value: "Gasoline", label: "Gasoline" },
-    { value: "Diesel", label: "Diesel" },
-    { value: "Electric", label: "Electric" },
-    { value: "Hybrid", label: "Hybrid" },
+    { value: "Gasoline", label: "Gasoline", category: "fuel" },
+    { value: "Diesel", label: "Diesel", category: "fuel" },
+    { value: "Electric", label: "Electric", category: "fuel" },
+    { value: "Hybrid", label: "Hybrid", category: "fuel" },
     // Transmission filters
-    { value: "Automatic", label: "Automatic" },
-    { value: "Manual", label: "Manual" },
+    { value: "Automatic", label: "Automatic", category: "transmission" },
+    { value: "Manual", label: "Manual", category: "transmission" },
   ];
 
   useEffect(() => {
@@ -102,10 +110,12 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
         setLoading(true);
         setError(null);
 
-        // Fetch user's cars if userId is available
+        // Fetch user's cars if userId is available - search entire database
         if (userId) {
           const userCarsResponse = await fetch(
-            `/api/cars?userId=${userId}&limit=1000`
+            `/api/cars?userId=${userId}&limit=10000${
+              advertisementType ? `&advertisementType=${advertisementType}` : ""
+            }`
           );
           const userCarsData = await userCarsResponse.json();
 
@@ -122,11 +132,15 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
           }
         }
 
-        // Fetch other users' cars with pagination
+        // Fetch other users' cars - if advertisement type is Rent, search entire database
         const response = await fetch(
-          `/api/cars?page=${currentPage}&limit=${itemsPerPage}&excludeUserId=${
-            userId || ""
-          }`
+          `/api/cars?${
+            advertisementType === "Rent" ? "" : `page=${currentPage}&`
+          }limit=${
+            advertisementType === "Rent" ? "10000" : itemsPerPage
+          }&excludeUserId=${userId || ""}${
+            advertisementType ? `&advertisementType=${advertisementType}` : ""
+          }&status=Active`
         );
         const data = await response.json();
 
@@ -140,12 +154,23 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
             likes: Number(car.likes) || 0,
           }));
 
-          // Append new cars to existing ones instead of replacing
-          setCars((prevCars) =>
-            currentPage === 1 ? formattedCars : [...prevCars, ...formattedCars]
-          );
-          setHasMore(data.pagination.hasMore);
-          setTotalItems(data.pagination.total);
+          // If advertisement type is Rent, show all cars at once
+          if (advertisementType === "Rent") {
+            setCars(formattedCars);
+            setFullCars(formattedCars);
+            setHasMore(false); // No pagination needed
+            setTotalItems(formattedCars.length); // Update total items to actual count
+          } else {
+            // Append new cars to existing ones for pagination
+            setCars((prevCars) =>
+              currentPage === 1
+                ? formattedCars
+                : [...prevCars, ...formattedCars]
+            );
+            setFullCars(formattedCars);
+            setHasMore(data.pagination.hasMore);
+            setTotalItems(data.pagination.total);
+          }
         } else {
           setError("Failed to fetch cars");
         }
@@ -159,7 +184,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     };
 
     fetchCars();
-  }, [currentPage, itemsPerPage, userId]);
+  }, [currentPage, itemsPerPage, userId, advertisementType]);
 
   const handleSortChange = (value: string) => {
     setSortOrder(value);
@@ -186,7 +211,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
     setCars(sortedCars);
   };
 
-  // Handle filtering
+  // Handle filtering with improved logic
   const handleFilterChange = (filters: string[]) => {
     setActiveFilters(filters);
     if (filters.length === 0) {
@@ -194,31 +219,43 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
       return;
     }
 
+    // Group filters by category
+    const groupedFilters = filters.reduce((acc, filter) => {
+      const option = filterOptions.find((opt) => opt.value === filter);
+      if (option) {
+        if (!acc[option.category]) {
+          acc[option.category] = [];
+        }
+        acc[option.category].push(filter);
+      }
+      return acc;
+    }, {} as Record<string, string[]>);
+
     // Apply multiple filter conditions
     const filteredCars = fullCars.filter((car) => {
-      return filters.some((filter) => {
-        // Check advertisement type filters
-        if (filter === "For Rent") return car.advertisementType === "Rent";
-        if (filter === "For Sale") return car.advertisementType === "Sale";
+      // Check if car matches all filter categories
+      return Object.entries(groupedFilters).every(([category, values]) => {
+        // If no filters for this category, return true
+        if (values.length === 0) return true;
 
-        // Check body type filters
-        if (
-          ["Sedan", "SUV", "Truck", "Hatchback", "Minivan"].includes(filter)
-        ) {
-          return car.bodyType === filter;
-        }
-
-        // Check fuel type filters
-        if (["Gasoline", "Diesel", "Electric", "Hybrid"].includes(filter)) {
-          return car.fuel === filter;
-        }
-
-        // Check transmission filters
-        if (["Automatic", "Manual"].includes(filter)) {
-          return car.transmission === filter;
-        }
-
-        return false;
+        // Check each filter in the category
+        return values.some((value) => {
+          switch (category) {
+            case "advertisementType":
+              return (
+                car.advertisementType ===
+                (value === "For Rent" ? "Rent" : "Sale")
+              );
+            case "bodyType":
+              return car.bodyType === value;
+            case "fuel":
+              return car.fuel === value;
+            case "transmission":
+              return car.transmission === value;
+            default:
+              return false;
+          }
+        });
       });
     });
 
@@ -306,6 +343,7 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
               </button>
               <div className="text-sm text-gray-500">
                 {cars.length} {cars.length === 1 ? "car" : "cars"} found
+                {advertisementType && ` for ${advertisementType.toLowerCase()}`}
               </div>
             </div>
 
@@ -424,11 +462,21 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
 
         {/* Other Listings Section */}
         <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Listings</h2>
+          <h2 className="text-2xl font-bold mb-4">
+            {advertisementType === "Rent"
+              ? "All Cars for Rent"
+              : advertisementType === "Sale"
+              ? "Cars for Sale"
+              : "Listings"}
+          </h2>
           {loading && currentPage === 1 ? (
             <LoadingSkeleton />
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
+          ) : cars.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-gray-500">No cars found</p>
+            </div>
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
@@ -441,8 +489,8 @@ const CardContainer: React.FC<CardContainerProps> = ({ advertisementType }) => {
                 ))}
               </div>
 
-              {/* Load More Button */}
-              {hasMore && (
+              {/* Load More Button - Show for Sale or no advertisement type */}
+              {hasMore && advertisementType !== "Rent" && (
                 <div className="mt-8 flex justify-center">
                   <button
                     onClick={loadMore}
