@@ -28,7 +28,6 @@ interface ApiResponse {
 interface CarQuery {
   userId?: string | { $ne: string };
   advertisementType?: string;
-  visiblity: "Public" | "Private";
   status: "Active" | "Pending";
 }
 
@@ -97,7 +96,6 @@ export async function GET(
 
     // Build the query
     const query: CarQuery = {
-      visiblity: "Public",
       status: "Active",
     };
 
