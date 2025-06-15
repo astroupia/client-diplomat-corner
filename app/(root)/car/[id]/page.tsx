@@ -18,7 +18,7 @@ import {
   Phone,
 } from "lucide-react";
 import type { ICar } from "@/lib/models/car.model";
-import { ContactSellerDialog } from "@/components/dialogs";
+import { ContactSellerDialog } from "@/components/dialogs/ContactSellerDialog";
 import { CarDetailLoadingSkeleton } from "@/components/loading-effects";
 import { ReviewsSection } from "@/components/reviews";
 import { motion, AnimatePresence } from "framer-motion";
@@ -459,8 +459,8 @@ export default function CarDetails() {
             </div>
           </div>
 
-          {/* Contact section - Show phone number for all cars */}
-          {user && user.role !== "admin" && user.phoneNumber && (
+          {/* Contact section - Show phone number only for non-rental cars */}
+          {user && user.role !== "admin" && user.phoneNumber && car.advertisementType !== "Rent" && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -481,10 +481,19 @@ export default function CarDetails() {
           )}
 
           {/* Show inquiry button only for rental cars */}
-          {user && user.role !== "admin" && car.advertisementType === "Rent" && (
+          {car.advertisementType === "Rent" && (
             <div className="mt-4">
               <button
-                onClick={() => setIsDialogOpen(true)}
+                onClick={() => {
+                  if (!user) {
+                    // Redirect to sign-in page if user is not authenticated
+                    router.push('/sign-in');
+                    return;
+                  }
+                  if (user.role !== "admin") {
+                    setIsDialogOpen(true);
+                  }
+                }}
                 className="w-full bg-primary text-white font-semibold py-3 px-6 rounded-md hover:bg-primary/80 transition-colors duration-200"
               >
                 Inquire Now
@@ -517,7 +526,9 @@ export default function CarDetails() {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         productType="car"
-        sellerName="the seller"
+        sellerName={user?.firstName + ' ' + user?.lastName || 'the seller'}
+        carId={car._id}
+        sellerId={car.userId}
       />
     </div>
   );
