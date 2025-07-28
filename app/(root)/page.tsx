@@ -57,6 +57,159 @@ const AdvertPlaceholder = ({
   );
 };
 
+// Advertisement Carousel Component
+const AdvertisementCarousel = () => {
+  const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+
+  // Advertisement data array using vital images
+  const advertisements = [
+    {
+      id: 1,
+      image: images.vial_logo.src,
+      alt: images.vial_logo.alt,
+      badge: "Featured Ad",
+      title: "Vital Security",
+      description: "Discover premium security solutions for your needs.",
+      link: "https://www.vitalsecureplc.com",
+      linkText: "Learn More",
+    },
+    {
+      id: 2,
+      image: images.vital_1.src,
+      alt: images.vital_1.alt,
+      badge: "Sponsored",
+      title: "Vital Security",
+      description: "Comprehensive security service for diplomatic community",
+      link: "https://www.vitalsecureplc.com",
+      linkText: "Explore Services",
+    },
+    {
+      id: 3,
+      image: images.vital_2.src,
+      alt: images.vital_2.alt,
+      badge: "Sponsored",
+      title: "Vital Security",
+      description: "Excellence in international standards.",
+      link: "https://www.vitalsecureplc.com",
+      linkText: "Visit Website",
+    },
+    {
+      id: 4,
+      image: images.vital_3.src,
+      alt: images.vital_3.alt,
+      badge: "Sponsored",
+      title: "Vital Security",
+      description: "Innovative vital security solutions for modern needs.",
+      link: "https://www.vitalsecureplc.com",
+      linkText: "Contact Us",
+    },
+  ];
+
+  const nextAd = () => {
+    setCurrentAdIndex((prevIndex) =>
+      prevIndex === advertisements.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  const prevAd = () => {
+    setCurrentAdIndex((prevIndex) =>
+      prevIndex === 0 ? advertisements.length - 1 : prevIndex - 1
+    );
+  };
+
+  const goToAd = (index: number) => {
+    setCurrentAdIndex(index);
+  };
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (isHovering) return;
+
+    const interval = setInterval(() => {
+      nextAd();
+    }, 5000); // Change ad every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [isHovering]);
+
+  const currentAd = advertisements[currentAdIndex];
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-xl sm:rounded-2xl shadow-sm group"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      <Image
+        width={800}
+        height={420}
+        src={currentAd.image || "/placeholder.svg"}
+        alt={currentAd.alt}
+        className="w-full h-[320px] sm:h-[420px] object-cover transition-transform duration-500 group-hover:scale-105"
+        priority
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+
+      {/* Navigation Arrows */}
+      <button
+        onClick={prevAd}
+        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition-colors duration-300 opacity-0 group-hover:opacity-100"
+        aria-label="Previous advertisement"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+      <button
+        onClick={nextAd}
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm text-white p-2 rounded-full hover:bg-white/30 transition-colors duration-300 opacity-0 group-hover:opacity-100"
+        aria-label="Next advertisement"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+
+      {/* Content Overlay */}
+      <div className="absolute bottom-0 left-0 p-4 sm:p-6 w-full">
+        <span className="bg-primary/90 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
+          {currentAd.badge}
+        </span>
+        <h3 className="text-white text-xl sm:text-2xl font-bold mt-2 mb-2 sm:mb-3">
+          {currentAd.title}
+        </h3>
+        <p className="text-white/90 text-xs sm:text-sm mb-3 sm:mb-4 max-w-md">
+          {currentAd.description}
+        </p>
+        <Link
+          href={currentAd.link}
+          target="_blank"
+          className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm text-primary px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-md hover:bg-white transition-colors duration-300 text-sm"
+        >
+          {currentAd.linkText}
+          <ChevronDown
+            size={16}
+            className="text-white w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-primary"
+          />
+        </Link>
+      </div>
+
+      {/* Pagination Dots */}
+      <div className="absolute bottom-4 right-4 flex gap-1">
+        {advertisements.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToAd(index)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              index === currentAdIndex
+                ? "bg-white w-4"
+                : "bg-white/50 hover:bg-white/70"
+            }`}
+            aria-label={`Go to advertisement ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Hero Section
 const HeroSection = () => {
   // Move state and effect outside of the render function
@@ -74,60 +227,27 @@ const HeroSection = () => {
     <section className="pt-2 sm:pt-3 md:pt-4">
       <MaxWidthWrapper className="px-2 sm:px-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 sm:gap-6">
-          {/* Left Column - Advertisement Space */}
+          {/* Left Column - Advertisement Carousel */}
           <div className="lg:col-span-7 space-y-4 sm:space-y-6">
-            <div className="relative overflow-hidden rounded-xl sm:rounded-2xl shadow-sm group">
-              <Image
-                width={800}
-                height={420}
-                src={images.dashen.src || "/placeholder.svg"}
-                alt={images.dashen.alt}
-                className="w-full h-[320px] sm:h-[420px] object-cover transition-transform duration-500 group-hover:scale-105"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-4 sm:p-6 w-full">
-                <span className="bg-primary/90 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm">
-                  Featured Ad
-                </span>
-                <h3 className="text-white text-xl sm:text-2xl font-bold mt-2 mb-2 sm:mb-3">
-                  Dashen SuperApp
-                </h3>
-                <p className="text-white/90 text-xs sm:text-sm mb-3 sm:mb-4 max-w-md">
-                  Discover Ethiopian Best SuperApp. Special offers for early
-                  subscribers.
-                </p>
-                <Link
-                  href="https://www.dashensuperapp.com/"
-                  target="_blank"
-                  className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm text-primary px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-md hover:bg-white transition-colors duration-300 text-sm"
-                >
-                  Learn More
-                  <ChevronDown
-                    size={16}
-                    className="text-white w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-primary"
-                  />
-                </Link>
-              </div>
-            </div>
+            <AdvertisementCarousel />
 
             <div className="grid grid-cols-2 gap-3 sm:gap-6">
               <div className="relative overflow-hidden rounded-xl sm:rounded-2xl shadow-sm group">
                 <Image
                   width={400}
                   height={200}
-                  src={images.ad.src || "/placeholder.svg"}
-                  alt={images.ad.alt}
+                  src={images.dashen.src || "/placeholder.svg"}
+                  alt={images.dashen.alt}
                   className="w-full h-[150px] sm:h-[200px] object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-3 sm:p-4 w-full">
                   <Link
-                    href="/contact-us"
+                    href="https://www.dashensuperapp.com/"
                     target="_blank"
                     className="inline-flex items-center gap-1 bg-white/90 backdrop-blur-sm text-primary px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm shadow-md hover:bg-white transition-colors duration-300"
                   >
-                    Contact Us
+                    Visit Dashen SuperApp
                   </Link>
                 </div>
               </div>
