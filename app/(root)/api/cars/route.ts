@@ -59,7 +59,29 @@ async function uploadImage(
       }
     );
 
-    const data = await response.json();
+    // Check if response is ok before trying to parse JSON
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("cPanel API error response:", errorText);
+      return {
+        success: false,
+        error: `Upload failed: ${response.status} ${response.statusText}`,
+      };
+    }
+
+    // Try to parse JSON response
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error("Failed to parse JSON response:", jsonError);
+      const responseText = await response.text();
+      console.error("Response text:", responseText);
+      return {
+        success: false,
+        error: "Invalid response from upload service",
+      };
+    }
 
     if (data.status === 0) {
       return {
