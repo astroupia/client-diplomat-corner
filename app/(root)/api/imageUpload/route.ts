@@ -67,6 +67,17 @@ export async function POST(
     const buffer = await file.arrayBuffer();
     const base64Data = Buffer.from(buffer).toString("base64");
 
+    console.log("🚀 Starting image upload to cPanel (imageUpload route)...");
+    console.log(
+      "📡 API URL:",
+      `${CPANEL_API_URL}/execute/Fileman/upload_files`
+    );
+    console.log("👤 Username:", CPANEL_USERNAME);
+    console.log("🔑 Token exists:", !!CPANEL_API_TOKEN);
+    console.log("📄 File name:", file.name);
+    console.log("📏 File size:", file.size, "bytes");
+    console.log("📏 Base64 data length:", base64Data.length);
+
     const response = await fetch(
       `${CPANEL_API_URL}/execute/Fileman/upload_files`,
       {
@@ -85,10 +96,19 @@ export async function POST(
       }
     );
 
+    console.log("📊 Response status:", response.status);
+    console.log("📊 Response status text:", response.statusText);
+    console.log(
+      "📊 Response headers:",
+      Object.fromEntries(response.headers.entries())
+    );
+
     // Check if response is ok before trying to parse JSON
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("cPanel API error response:", errorText);
+      console.error("❌ cPanel API error response:", errorText);
+      console.error("❌ Error response length:", errorText.length);
+      console.error("❌ Error response preview:", errorText.substring(0, 500));
       return NextResponse.json(
         {
           success: false,
@@ -101,13 +121,24 @@ export async function POST(
     // Try to parse JSON response
     let data;
     try {
-      data = await response.json();
-    } catch (jsonError) {
-      console.error("Failed to parse JSON response:", jsonError);
       const responseText = await response.text();
-      console.error("Response text:", responseText);
+      console.log("📄 Raw response text length:", responseText.length);
+      console.log("📄 Raw response preview:", responseText.substring(0, 500));
+
+      data = JSON.parse(responseText);
+      console.log("✅ Successfully parsed JSON response:", data);
+    } catch (jsonError) {
+      console.error("❌ Failed to parse JSON response:", jsonError);
+      const responseText = await response.text();
+      console.error("❌ Full response text:", responseText);
+      console.error("❌ Response text length:", responseText.length);
+      console.error("❌ Response starts with:", responseText.substring(0, 100));
       return NextResponse.json(
-        { success: false, error: "Invalid response from upload service" },
+        {
+          success: false,
+          error:
+            "Invalid response from upload service - received HTML instead of JSON",
+        },
         { status: 500 }
       );
     }
