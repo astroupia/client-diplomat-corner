@@ -148,7 +148,7 @@ export async function POST(
     }
 
     // Check total size of all files
-    const MAX_TOTAL_SIZE = 4.5 * 1024 * 1024; // 4.5MB in bytes
+    const MAX_TOTAL_SIZE = 2 * 1024 * 1024; // 2MB in bytes (reduced for cPanel compatibility)
     const totalSize = files.reduce((acc, file) => acc + file.size, 0);
 
     if (totalSize > MAX_TOTAL_SIZE) {
