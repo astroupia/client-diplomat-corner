@@ -169,7 +169,7 @@ const CardHouse: React.FC<CardProps> = ({
               </div>
               <div className="flex items-center gap-1">
                 <Ruler size={16} />
-                <span>{size.toLocaleString()} ft²</span>
+                <span>{size.toLocaleString()} m²</span>
               </div>
               <div className="flex items-center gap-1">
                 <Car size={16} />
