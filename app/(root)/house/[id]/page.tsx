@@ -507,11 +507,15 @@ export default function HouseDetails() {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Phone className="text-primary" size={20} />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800">Contact Seller</h3>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Contact Owner
+                </h3>
               </div>
               <div className="flex items-center gap-2 text-gray-600">
                 <span className="font-medium">Phone:</span>
-                <span className="text-primary font-semibold">{user.phoneNumber}</span>
+                <span className="text-primary font-semibold">
+                  {user.phoneNumber}
+                </span>
               </div>
             </motion.div>
           )}
