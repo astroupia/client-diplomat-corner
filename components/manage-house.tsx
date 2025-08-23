@@ -799,27 +799,7 @@ const ManageHouse: React.FC<ManageHouseProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Advertisement Type
                   </label>
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleOptionChange("advertisementType", "Sale")
-                      }
-                      className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-lg border transition-colors ${
-                        formData.advertisementType === "Sale"
-                          ? "bg-primary text-white border-primary"
-                          : "bg-white text-gray-700 border-gray-300 hover:border-primary"
-                      }`}
-                    >
-                      <CheckCircle
-                        className={`w-5 h-5 ${
-                          formData.advertisementType === "Sale"
-                            ? "opacity-100"
-                            : "opacity-0"
-                        }`}
-                      />
-                      <span className="text-sm font-medium">For Sale</span>
-                    </button>
+                  <div className="flex">
                     <button
                       type="button"
                       onClick={() =>
